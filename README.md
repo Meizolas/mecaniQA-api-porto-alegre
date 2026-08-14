@@ -19,8 +19,8 @@ Neste primeiro desafio, você e sua equipe implementarão um MVP na linguagem de
 
 ## Membros da Equipe
 
-* Membro 1
-* Membro 2
-* Membro 3
-* Membro 4
-* Membro 5
+* Hélio Nunes Moraes Junior
+* Kevilyn Bitencourt da Cruz
+* Rodrigo Alves Oliveira
+* Marcelo Henrique Fernandes
+* Murillo Rigaud dos Santos Oliveira
