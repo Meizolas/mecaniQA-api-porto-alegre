@@ -1,0 +1,21 @@
+# IntelliJ IDEA
+.idea/
+
+# Gradle
+.gradle/
+build/
+gradlew
+gradlew.bat
+
+# Compiled output
+*.class
+*.jar
+*.war
+*.ear
+
+# Log files
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
