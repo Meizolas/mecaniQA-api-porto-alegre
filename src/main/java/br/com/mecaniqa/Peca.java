@@ -1,3 +1,4 @@
+package src.main.java.br.com.mecaniqa;
 import java.time.LocalDateTime;
 
 public class Peca {
