@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import java.util.List;
 
 @RestController
-@RequestMapping("/pecas")
+@RequestMapping("/api/pecas")
 public class PecaController {
 
     private final PecaRepository repository;
