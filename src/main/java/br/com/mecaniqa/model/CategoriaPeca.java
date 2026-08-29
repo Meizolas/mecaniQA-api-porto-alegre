@@ -1,4 +1,4 @@
-package src.main.java.br.com.mecaniqa;
+package br.com.mecaniqa.model;
 public enum CategoriaPeca {
     MOTOR, 
     SUSPENSAO,

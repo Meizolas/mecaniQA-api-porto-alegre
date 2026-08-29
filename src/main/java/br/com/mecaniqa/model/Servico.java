@@ -1,4 +1,4 @@
-package src.main.java.br.com.mecaniqa;
+package br.com.mecaniqa.model;
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
