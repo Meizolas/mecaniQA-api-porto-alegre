@@ -8,10 +8,10 @@ public class PecaRepository {
     
     private static PecaRepository instance;
     
-    
+   
     private List<Peca> pecas;
 
-    
+   
     private PecaRepository() {
         this.pecas = new ArrayList<>();
     }
