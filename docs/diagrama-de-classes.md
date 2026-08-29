@@ -57,7 +57,7 @@ class CategoriaPeca {
 Peca --> "1" CategoriaPeca : categoria
 ```
 
-## Atualização — 29/08/2026 (com base no código atual)
+## Atualização intermediária — 29/08/2026
 
 Diagrama revisado para refletir o estado atual do código depois da entrega de hoje: nomes de atributos que mudaram em `Peca`/`Servico`, o valor `CARROCERIA` adicionado (e `FREIOS` renomeado para `FREIO`) em `CategoriaPeca`, a associação `Servico → Peca` (lista de peças utilizadas) e as novas classes `PecaRepository`/`ServicoRepository` (padrão Singleton).
 
@@ -163,17 +163,17 @@ Servico "1" o-- "0..*" Peca : pecasUtilazadas
 PecaRepository "1" o-- "0..*" Peca : pecas
 ServicoRepository "1" o-- "0..*" Servico : servicos
 ```
-## Atualização — 29/08/2026 (com base no código atual)
+## Atualização final — 29/08/2026 (com base no código atual)
 
 Diagrama revisado para refletir o estado atual do código depois das alterações realizadas até a entrega de hoje: atualização dos atributos das classes `Peca` e `Servico`, atualização dos valores do enum `CategoriaPeca`, associação entre `Servico` e `Peca` por meio da lista de peças utilizadas e inclusão das classes `PecaRepository` e `ServicoRepository`, implementadas utilizando o padrão Singleton.
 
 **Principais diferenças em relação à versão anterior:**
 
-- `Peca`: atualização dos atributos para refletir a implementação atual, incluindo `id`, `Fornecedor`, `quantidadeEstoque`, `precoCusto`, `preco`, `dataCadastro`, `dataAtualizacao`, `tamanho`, `cor` e `categoria`, além dos respectivos getters e setters.
+- `Peca`: atualização dos atributos para refletir a implementação atual, incluindo `codigo`, `codigoBarras`, `fornecedorMarca`, `quantidadeEstoque`, `precoCusto`, `precoVenda`, `dataCadastro`, `dataUltimaAtualizacao`, `tamanho`, `cor` e `categoria`, além dos respectivos getters e setters.
 
-- `Servico`: atualização do atributo `nomeServico` para `descricao`; `tempoEstimadoMinutos` passou a ser representado como `Double`; `dataUltimaAtualizacao` foi atualizada para `dataAtualizacao`; inclusão do atributo `pecasUtilazadas : List<Peca>` e do método `adicionarPeca(Peca)`.
+- `Servico`: atualização do atributo `nomeServico` para `descricao`; `tempoEstimadoMinutos` passou a ser representado como `Double`; `dataUltimaAtualizacao` foi atualizada para `dataAtualizacao`; inclusão do atributo `pecasUtilizadas : List<Peca>` e do método `adicionarPeca(Peca)`.
 
-- `CategoriaPeca`: atualização dos valores do enum de acordo com a implementação atual, incluindo `MOTOR`, `SUSPENSAO`, `FREIO`, `ELETRICA`, `ACESSORIOS` e `CARROCERIA`.
+- `CategoriaPeca`: atualização dos valores do enum de acordo com a implementação atual: `MOTOR`, `SUSPENSAO`, `FREIOS`, `ELETRICA` e `ACESSORIOS`.
 
 - `Servico → Peca`: inclusão da associação entre `Servico` e `Peca`, representando a lista de peças utilizadas em cada serviço.
 
@@ -228,12 +228,12 @@ class Servico {
     -Double valorMaoDeObra
     -Double custoTabelado
     -Double tempoEstimadoMinutos
-    -List~Peca~ pecasUtilazadas
+    -List~Peca~ pecasUtilizadas
     -LocalDateTime dataCadastro
     -LocalDateTime dataAtualizacao
 
     +Servico()
-    +Servico(Long id, String descricao, Double valorMaoDeObra, Double custoTabelado, Double tempoEstimadoMinutos, List~Peca~ pecasUtilazadas, LocalDateTime dataCadastro, LocalDateTime dataAtualizacao)
+    +Servico(String descricao, Double valorMaoDeObra, Double custoTabelado, Double tempoEstimadoMinutos, List~Peca~ pecasUtilizadas)
     +Long getId()
     +void setId(Long id)
     +String getDescricao()
@@ -242,10 +242,10 @@ class Servico {
     +void setValorMaoDeObra(Double valorMaoDeObra)
     +Double getCustoTabelado()
     +void setCustoTabelado(Double custoTabelado)
-    +Double gettempoEstimadoMinutos()
-    +void settempoEstimadoMinutos(Double tempoEstimadoMinutos)
+    +Double getTempoEstimadoMinutos()
+    +void setTempoEstimadoMinutos(Double tempoEstimadoMinutos)
     +List~Peca~ getPecasUtilizadas()
-    +void setPecasUtilizadas(List~Peca~ pecasUtilazadas)
+    +void setPecasUtilizadas(List~Peca~ pecasUtilizadas)
     +void adicionarPeca(Peca peca)
     +LocalDateTime getDataCadastro()
     +void setDataCadastro(LocalDateTime dataCadastro)
@@ -313,10 +313,11 @@ class ServicoController {
 }
 
 Peca --> CategoriaPeca : categoria
-Servico "1" o-- "0..*" Peca : pecasUtilazadas
+Servico "1" o-- "0..*" Peca : pecasUtilizadas
 
 PecaController --> PecaRepository : utiliza
 ServicoController --> ServicoRepository : utiliza
 
 PecaRepository "1" o-- "0..*" Peca : pecas
 ServicoRepository "1" o-- "0..*" Servico : servicos
+```
