@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "6ba0face-d736-45bb-b16a-13ffced59fe0",
-    "name": "MecaniQA API - Peças (PecaController)",
-    "description": "Collection de testes das rotas REST de Peças (PecaController) da API MecaniQA.\n\nCobre as 5 rotas do controller (POST, GET listar, GET por código, PUT, DELETE) com cenários de sucesso e de erro (404), conforme as User Stories US01-US04 (Gestão de Peças) do OAT 1.\n\nComo usar:\n1. Suba a aplicação localmente (./gradlew bootRun), porta padrão 8080.\n2. Confira a variável de coleção 'baseUrl' (padrão http://localhost:8080).\n3. Rode a collection na ordem (Run collection / Collection Runner) - os requests dependem uns dos outros via a variável 'pecaCodigo', que é preenchida automaticamente pelo request 1.",
+    "name": "MecaniQA API - Peças e Serviços",
+    "description": "Collection de testes das rotas REST da API MecaniQA, cobrindo as 8 User Stories do OAT 1 (US01-US04 Gestão de Peças, US05-US08 Gestão de Serviços).\n\n18 requisições no total (9 por entidade), com cenários de sucesso e de erro (404) para cada uma das 5 operações de cada controller.\n\nComo usar:\n1. Suba a aplicação localmente (./gradlew bootRun), porta padrão 8080.\n2. Confira as variáveis de coleção 'baseUrl', 'pecaCodigo' e 'servicoId' (as duas últimas são preenchidas automaticamente durante a execução).\n3. Rode a collection inteira (Run collection / Collection Runner) na ordem - dentro de cada pasta os requests dependem uns dos outros.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -15,396 +15,801 @@
       "key": "pecaCodigo",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "servicoId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "1. Criar Peça (US01 - Cadastro de nova Peça)",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas"
-          ]
-        },
-        "description": "Cadastra uma peça com todos os dados e categoria. Espera 201 Created e um código gerado pela aplicação.",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 20,\n  \"precoCusto\": 45.5,\n  \"precoVenda\": 89.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "Peças (PecaController) - US01 a US04",
+      "item": [
+        {
+          "name": "1. Criar Peça (US01 - Cadastro de nova Peça)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            },
+            "description": "Cadastra uma peça com todos os dados e categoria. Espera 201 Created e um código gerado pela aplicação.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 20,\n  \"precoCusto\": 45.5,\n  \"precoVenda\": 89.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201 Created\", function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "",
-              "var jsonData = pm.response.json();",
-              "",
-              "pm.test(\"Peça recebe código gerado pela aplicação\", function () {",
-              "    pm.expect(jsonData.codigo).to.exist;",
-              "    pm.expect(jsonData.codigo).to.be.a(\"number\");",
-              "});",
-              "",
-              "pm.test(\"Datas de cadastro e de última atualização são preenchidas\", function () {",
-              "    pm.expect(jsonData.dataCadastro).to.exist;",
-              "    pm.expect(jsonData.dataUltimaAtualizacao).to.exist;",
-              "});",
-              "",
-              "pm.collectionVariables.set(\"pecaCodigo\", jsonData.codigo);"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "2. Criar segunda Peça (apoio para o teste de listagem)",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas"
-          ]
-        },
-        "description": "Cadastra uma segunda peça só para validar que a listagem (rota 3) retorna mais de um item e que os códigos são únicos e sequenciais.",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"codigoBarras\": \"7891234560029\",\n  \"fornecedorMarca\": \"NGK\",\n  \"quantidadeEstoque\": 50,\n  \"precoCusto\": 12.0,\n  \"precoVenda\": 25.0,\n  \"categoria\": \"ELETRICA\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Peça recebe código gerado pela aplicação\", function () {",
+                  "    pm.expect(jsonData.codigo).to.exist;",
+                  "    pm.expect(jsonData.codigo).to.be.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Datas de cadastro e de última atualização são preenchidas\", function () {",
+                  "    pm.expect(jsonData.dataCadastro).to.exist;",
+                  "    pm.expect(jsonData.dataUltimaAtualizacao).to.exist;",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"pecaCodigo\", jsonData.codigo);"
+                ]
+              }
             }
-          }
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 201 Created\", function () {",
-              "    pm.response.to.have.status(201);",
-              "});",
-              "",
-              "var jsonData = pm.response.json();",
-              "",
-              "pm.test(\"Segunda peça recebe um código diferente da primeira\", function () {",
-              "    pm.expect(jsonData.codigo).to.exist;",
-              "    pm.expect(String(jsonData.codigo)).to.not.eql(pm.collectionVariables.get(\"pecaCodigo\"));",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "3. Listar Peças (US02 - Listar catálogo)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas"
           ]
         },
-        "description": "Lista todas as peças cadastradas. Espera 200 OK e um array com pelo menos as 2 peças criadas nos passos anteriores."
-      },
-      "response": [],
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200 OK\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Retorna uma lista com as peças cadastradas neste teste\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData).to.be.an(\"array\");",
-              "    pm.expect(jsonData.length).to.be.at.least(2);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "4. Buscar Peça por código - existente (US02)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "{{pecaCodigo}}"
-          ]
-        },
-        "description": "Busca a peça criada no passo 1 pelo seu código único. Espera 200 OK."
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200 OK\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Peça retornada corresponde ao código solicitado\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(String(jsonData.codigo)).to.eql(pm.collectionVariables.get(\"pecaCodigo\"));",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "5. Buscar Peça por código - inexistente (404)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/999999",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "999999"
-          ]
-        },
-        "description": "Cenário de QA: busca por um código que não existe. Espera 404 Not Found."
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404 Not Found para código inexistente\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "6. Atualizar Peça - existente (US03)",
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "{{pecaCodigo}}"
-          ]
-        },
-        "description": "Atualiza preço de custo/venda e quantidade em estoque da peça criada no passo 1. Espera 200 OK com os novos valores.",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 15,\n  \"precoCusto\": 48.0,\n  \"precoVenda\": 99.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "2. Criar segunda Peça (apoio para o teste de listagem)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            },
+            "description": "Cadastra uma segunda peça só para validar que a listagem (rota 3) retorna mais de um item e que os códigos são únicos e sequenciais.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"7891234560029\",\n  \"fornecedorMarca\": \"NGK\",\n  \"quantidadeEstoque\": 50,\n  \"precoCusto\": 12.0,\n  \"precoVenda\": 25.0,\n  \"categoria\": \"ELETRICA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             }
-          }
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 200 OK\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Peça é atualizada com os novos valores enviados\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.precoVenda).to.eql(99.9);",
-              "    pm.expect(jsonData.quantidadeEstoque).to.eql(15);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "7. Atualizar Peça - inexistente (404)",
-      "request": {
-        "method": "PUT",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/999999",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "999999"
-          ]
-        },
-        "description": "Cenário de QA: tenta atualizar um código que não existe. Espera 404 Not Found.",
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 15,\n  \"precoCusto\": 48.0,\n  \"precoVenda\": 99.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Segunda peça recebe um código diferente da primeira\", function () {",
+                  "    pm.expect(jsonData.codigo).to.exist;",
+                  "    pm.expect(String(jsonData.codigo)).to.not.eql(String(pm.collectionVariables.get(\"pecaCodigo\")));",
+                  "});"
+                ]
+              }
             }
-          }
-        }
-      },
-      "response": [],
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404 Not Found ao atualizar código inexistente\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "8. Excluir Peça - existente (US04)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "{{pecaCodigo}}"
           ]
         },
-        "description": "Exclui a peça criada no passo 1. Espera 204 No Content."
-      },
-      "response": [],
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 204 No Content\", function () {",
-              "    pm.response.to.have.status(204);",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "9. Excluir Peça - já removida (404)",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "api",
-            "pecas",
-            "{{pecaCodigo}}"
+          "name": "3. Listar Peças (US02 - Listar catálogo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            },
+            "description": "Lista todas as peças cadastradas. Espera 200 OK e um array com pelo menos as 2 peças criadas nos passos anteriores."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna uma lista com as peças cadastradas neste teste\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.length).to.be.at.least(2);",
+                  "});"
+                ]
+              }
+            }
           ]
         },
-        "description": "Cenário de QA: tenta excluir novamente a peça já removida no passo 8, confirmando que ela de fato saiu da lista em memória. Espera 404 Not Found."
-      },
-      "response": [],
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test(\"Status 404 Not Found ao excluir peça já removida\", function () {",
-              "    pm.response.to.have.status(404);",
-              "});"
-            ]
-          }
+          "name": "4. Buscar Peça por código - existente (US02)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            },
+            "description": "Busca a peça criada no passo 1 pelo seu código único. Espera 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Peça retornada corresponde ao código solicitado\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(String(jsonData.codigo)).to.eql(String(pm.collectionVariables.get(\"pecaCodigo\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Buscar Peça por código - inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "999999"
+              ]
+            },
+            "description": "Cenário de QA: busca por um código que não existe. Espera 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found para código inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Atualizar Peça - existente (US03)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            },
+            "description": "Atualiza preço de custo/venda e quantidade em estoque da peça criada no passo 1. Espera 200 OK com os novos valores.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 15,\n  \"precoCusto\": 48.0,\n  \"precoVenda\": 99.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Peça é atualizada com os novos valores enviados\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.precoVenda).to.eql(99.9);",
+                  "    pm.expect(jsonData.quantidadeEstoque).to.eql(15);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Atualizar Peça - inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "999999"
+              ]
+            },
+            "description": "Cenário de QA: tenta atualizar um código que não existe. Espera 404 Not Found.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"7891234560012\",\n  \"fornecedorMarca\": \"Bosch\",\n  \"quantidadeEstoque\": 15,\n  \"precoCusto\": 48.0,\n  \"precoVenda\": 99.9,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preta\",\n  \"categoria\": \"FREIOS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found ao atualizar código inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Excluir Peça - existente (US04)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            },
+            "description": "Exclui a peça criada no passo 1. Espera 204 No Content."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Excluir Peça - já removida (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/{{pecaCodigo}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "{{pecaCodigo}}"
+              ]
+            },
+            "description": "Cenário de QA: tenta excluir novamente a peça já removida no passo 8, confirmando que ela de fato saiu da lista em memória. Espera 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found ao excluir peça já removida\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "description": "Rotas de Peças: cadastro (US01), listar/buscar (US02), atualizar (US03), excluir (US04)."
+    },
+    {
+      "name": "Serviços (ServicoController) - US05 a US08",
+      "item": [
+        {
+          "name": "1. Criar Serviço (US05 - Cadastro de novo Serviço)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos"
+              ]
+            },
+            "description": "Cadastra um serviço informando nome, tempo estimado e custo. Espera 201 Created e um id gerado pela aplicação.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"valorMaoDeObra\": 80.0,\n  \"custoTabelado\": 150.0,\n  \"tempoEstimadoMinutos\": 45.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Serviço recebe id gerado pela aplicação\", function () {",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "    pm.expect(jsonData.id).to.be.a(\"number\");",
+                  "});",
+                  "",
+                  "pm.test(\"Datas de cadastro e de última atualização são preenchidas\", function () {",
+                  "    pm.expect(jsonData.dataCadastro).to.exist;",
+                  "    pm.expect(jsonData.dataAtualizacao).to.exist;",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"servicoId\", jsonData.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Criar segundo Serviço (apoio para o teste de listagem)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos"
+              ]
+            },
+            "description": "Cadastra um segundo serviço só para validar a listagem (rota 3) e a unicidade dos ids.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Alinhamento e balanceamento\",\n  \"valorMaoDeObra\": 60.0,\n  \"custoTabelado\": 90.0,\n  \"tempoEstimadoMinutos\": 30.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Segundo serviço recebe um id diferente do primeiro\", function () {",
+                  "    pm.expect(jsonData.id).to.exist;",
+                  "    pm.expect(String(jsonData.id)).to.not.eql(String(pm.collectionVariables.get(\"servicoId\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Listar Serviços (US06 - Listar catálogo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos"
+              ]
+            },
+            "description": "Lista todos os serviços cadastrados. Espera 200 OK e um array com pelo menos os 2 serviços criados nos passos anteriores."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna uma lista com os serviços cadastrados neste teste\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.length).to.be.at.least(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Buscar Serviço por id - existente (US06)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "{{servicoId}}"
+              ]
+            },
+            "description": "Busca o serviço criado no passo 1 pelo seu id único. Espera 200 OK."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Serviço retornado corresponde ao id solicitado\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(String(jsonData.id)).to.eql(String(pm.collectionVariables.get(\"servicoId\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5. Buscar Serviço por id - inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "999999"
+              ]
+            },
+            "description": "Cenário de QA: busca por um id que não existe. Espera 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found para id inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6. Atualizar Serviço - existente (US07)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "{{servicoId}}"
+              ]
+            },
+            "description": "Atualiza o tempo estimado e o custo tabelado do serviço criado no passo 1. Espera 200 OK com os novos valores.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"valorMaoDeObra\": 90.0,\n  \"custoTabelado\": 160.0,\n  \"tempoEstimadoMinutos\": 50.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Serviço é atualizado com os novos valores enviados\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.custoTabelado).to.eql(160.0);",
+                  "    pm.expect(jsonData.tempoEstimadoMinutos).to.eql(50.0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7. Atualizar Serviço - inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "999999"
+              ]
+            },
+            "description": "Cenário de QA: tenta atualizar um id que não existe. Espera 404 Not Found.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"valorMaoDeObra\": 90.0,\n  \"custoTabelado\": 160.0,\n  \"tempoEstimadoMinutos\": 50.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found ao atualizar id inexistente\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8. Excluir Serviço - existente (US08)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "{{servicoId}}"
+              ]
+            },
+            "description": "Exclui o serviço criado no passo 1. Espera 204 No Content."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204 No Content\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Excluir Serviço - já removido (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/servicos/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "servicos",
+                "{{servicoId}}"
+              ]
+            },
+            "description": "Cenário de QA: tenta excluir novamente o serviço já removido no passo 8. Espera 404 Not Found."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found ao excluir serviço já removido\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Rotas de Serviços: cadastro (US05), listar/buscar (US06), atualizar (US07), excluir (US08)."
     }
   ]
 }
