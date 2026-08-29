@@ -1,10 +1,9 @@
 package br.com.mecaniqa.model;
+
 public enum CategoriaPeca {
-    MOTOR, 
+    MOTOR,
     SUSPENSAO,
-    FREIO,
+    FREIOS,
     ELETRICA,
-    CARROCERIA,
-    ACESSORIOS,
-    GERAL
+    ACESSORIOS
 }

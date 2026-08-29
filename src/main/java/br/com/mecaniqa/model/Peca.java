@@ -1,44 +1,42 @@
 package br.com.mecaniqa.model;
+
 import java.time.LocalDateTime;
 
 public class Peca {
-    private Long id;
-    private String nome;
+    private Long codigo;
     private String codigoBarras;
-    private String Fornecedor;
-    private Double preco;
+    private String fornecedorMarca;
     private Integer quantidadeEstoque;
-    private CategoriaPeca categoria;
+    private Double precoCusto;
+    private Double precoVenda;
     private LocalDateTime dataCadastro;
-    private LocalDateTime dataAtualizacao;
+    private LocalDateTime dataUltimaAtualizacao;
+    private String tamanho;
+    private String cor;
+    private CategoriaPeca categoria;
 
     public Peca() {
     }
 
-    public Peca(Long id, String nome, String codigoBarras, String Fornecedor, Double preco, Integer quantidadeEstoque, CategoriaPeca categoria) {
-        this.id = id;
-        this.nome = nome;
+    public Peca(String codigoBarras, String fornecedorMarca, Integer quantidadeEstoque,
+                Double precoCusto, Double precoVenda, String tamanho, String cor,
+                CategoriaPeca categoria) {
         this.codigoBarras = codigoBarras;
-        this.Fornecedor = Fornecedor;
-        this.preco = preco;
+        this.fornecedorMarca = fornecedorMarca;
         this.quantidadeEstoque = quantidadeEstoque;
+        this.precoCusto = precoCusto;
+        this.precoVenda = precoVenda;
+        this.tamanho = tamanho;
+        this.cor = cor;
         this.categoria = categoria;
     }
 
-    public Long getId() {
-        return id;
+    public Long getCodigo() {
+        return codigo;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setCodigo(Long codigo) {
+        this.codigo = codigo;
     }
 
     public String getCodigoBarras() {
@@ -49,20 +47,12 @@ public class Peca {
         this.codigoBarras = codigoBarras;
     }
 
-    public String getFornecedor() {
-        return Fornecedor;
+    public String getFornecedorMarca() {
+        return fornecedorMarca;
     }
 
-    public void setFornecedor(String Fornecedor) {
-        this.Fornecedor = Fornecedor;
-    }
-
-    public Double getPreco() {
-        return preco;
-    }
-
-    public void setPreco(Double preco) {
-        this.preco = preco;
+    public void setFornecedorMarca(String fornecedorMarca) {
+        this.fornecedorMarca = fornecedorMarca;
     }
 
     public Integer getQuantidadeEstoque() {
@@ -73,12 +63,20 @@ public class Peca {
         this.quantidadeEstoque = quantidadeEstoque;
     }
 
-    public CategoriaPeca getCategoria() {
-        return categoria;
+    public Double getPrecoCusto() {
+        return precoCusto;
     }
 
-    public void setCategoria(CategoriaPeca categoria) {
-        this.categoria = categoria;
+    public void setPrecoCusto(Double precoCusto) {
+        this.precoCusto = precoCusto;
+    }
+
+    public Double getPrecoVenda() {
+        return precoVenda;
+    }
+
+    public void setPrecoVenda(Double precoVenda) {
+        this.precoVenda = precoVenda;
     }
 
     public LocalDateTime getDataCadastro() {
@@ -89,14 +87,37 @@ public class Peca {
         this.dataCadastro = dataCadastro;
     }
 
-    public LocalDateTime getDataAtualizacao() {
-        return dataAtualizacao;
+    public LocalDateTime getDataUltimaAtualizacao() {
+        return dataUltimaAtualizacao;
     }
 
-    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
-        this.dataAtualizacao = dataAtualizacao;
+    public void setDataUltimaAtualizacao(LocalDateTime dataUltimaAtualizacao) {
+        this.dataUltimaAtualizacao = dataUltimaAtualizacao;
     }
 
+    public String getTamanho() {
+        return tamanho;
+    }
+
+    public void setTamanho(String tamanho) {
+        this.tamanho = tamanho;
+    }
+
+    public String getCor() {
+        return cor;
+    }
+
+    public void setCor(String cor) {
+        this.cor = cor;
+    }
+
+    public CategoriaPeca getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(CategoriaPeca categoria) {
+        this.categoria = categoria;
+    }
 }
 
 
