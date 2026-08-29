@@ -1,21 +1,17 @@
-# IntelliJ IDEA
-.idea/
-
 # Gradle
 .gradle/
 build/
-gradlew
-gradlew.bat
 
-# Compiled output
+# Compilação Java
 *.class
-*.jar
-*.war
-*.ear
 
-# Log files
-*.log
+# VS Code
+.vscode/
 
-# OS-specific
+# IntelliJ
+.idea/
+*.iml
+
+# Sistema operacional
 .DS_Store
 Thumbs.db
