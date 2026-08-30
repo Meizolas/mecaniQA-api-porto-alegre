@@ -1,6 +1,6 @@
 # Diagrama de Classes
 
-Versão oficial da OAT 1, atualizada em 29/08/2026 conforme o código presente no projeto.
+Versão oficial, atualizada em 29/08/2026 conforme o código presente no projeto.
 
 ```mermaid
 classDiagram
