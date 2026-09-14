@@ -143,4 +143,47 @@ ServicoController --> ServicoRepository : utiliza
 
 PecaRepository "1" o-- "0..*" Peca : pecas
 ServicoRepository "1" o-- "0..*" Servico : servicos
+
+
+class OrdemServico {
+    -Long id
+    -String descricaoProblema
+    -LocalDate dataAbertura
+    -StatusOrdemServico status
+    -double valor
+
+    - OrdemServico(builder : Builder)
+    + builder()$ : Builder
+    + getId() : Long
+    + setId(id : Long) : void
+    + getDescricaoProblema() : String
+    + setDescricaoProblema(descricaoProblema : String) : void
+    + getDataAbertura() : LocalDate
+    + setDataAbertura(dataAbertura : LocalDate) : void
+    + getStatus() : StatusOrdemServico
+    + setStatus(status : StatusOrdemServico) : void
+    + getValor() : double
+    + setValor(valor : double) : void
+
+    }
+
+    class Builder {
+    -long id
+    -String descricaoProblema
+    -LocalDate dataAbertura
+    -StatusOrdemServico status
+    -double valor
+
+    + id(id : long) : Builder
+    + descricaoProblema(descricaoProblema : String) : Builder
+    + dataAbertura(dataAbertura : LocalDate) : Builder
+    + status(status : StatusOrdemServico) : Builder
+    + valor(valor : double) : Builder
+    + build() : OrdemServico
+}
+
+OrdemServico +-- Builder : contém
+Builder ..> OrdemServico : cria
+
+note for Builder "Classe interna pública e estática"
 ```
