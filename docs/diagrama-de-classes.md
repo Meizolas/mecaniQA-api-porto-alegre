@@ -182,8 +182,6 @@ class OrdemServico {
     + build() : OrdemServico
 }
 
-OrdemServico +-- Builder : contém
 Builder ..> OrdemServico : cria
 
-note for Builder "Classe interna pública e estática"
-```
+note for Builder "Classe interna pública e estática de OrdemServico"
