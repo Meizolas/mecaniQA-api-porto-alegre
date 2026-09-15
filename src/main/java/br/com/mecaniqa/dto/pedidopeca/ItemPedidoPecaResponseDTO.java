@@ -1,9 +1,5 @@
 package br.com.mecaniqa.dto.pedidopeca;
 
-/**
- * DTO de resposta para um item dentro de um Pedido de Peças.
- * Expõe os dados relevantes da peça, da quantidade e dos valores calculados.
- */
 public class ItemPedidoPecaResponseDTO {
 
     private Long id;

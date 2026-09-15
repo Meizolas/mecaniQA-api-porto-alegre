@@ -5,10 +5,6 @@ import br.com.mecaniqa.model.StatusPedidoPeca;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * DTO de resposta para um Pedido de Peças.
- * Nunca expõe entidades de domínio puro ao cliente.
- */
 public class PedidoPecaResponseDTO {
 
     private Long id;

@@ -1,9 +1,5 @@
 package br.com.mecaniqa.dto.pedidopeca;
 
-/**
- * DTO de requisição para um item dentro de um Pedido de Peças.
- * O cliente informa o ID da peça existente e a quantidade desejada.
- */
 public class ItemPedidoPecaRequestDTO {
 
     private Long codigoPeca;

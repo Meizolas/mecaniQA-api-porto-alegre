@@ -1,10 +1,5 @@
 package br.com.mecaniqa.model;
 
-/**
- * Entidade associativa que representa um item dentro de um Pedido de Peças.
- * Relaciona uma Peca (já existente) a um PedidoPeca, registrando
- * a quantidade desejada e o preço unitário no momento da inclusão.
- */
 public class ItemPedidoPeca {
 
     private Long id;
@@ -20,10 +15,6 @@ public class ItemPedidoPeca {
         this.quantidade = quantidade;
         this.precoUnitario = peca.getPrecoVenda();
     }
-
-    // -------------------------------------------------------------------------
-    // Getters e Setters
-    // -------------------------------------------------------------------------
 
     public Long getId() {
         return id;
@@ -57,13 +48,10 @@ public class ItemPedidoPeca {
         this.precoUnitario = precoUnitario;
     }
 
-    /**
-     * Calcula o subtotal deste item (precoUnitario * quantidade).
-     */
     public Double getSubtotal() {
         if (precoUnitario == null || quantidade == null) {
             return 0.0;
         }
         return precoUnitario * quantidade;
     }
-}
+}git checkout main

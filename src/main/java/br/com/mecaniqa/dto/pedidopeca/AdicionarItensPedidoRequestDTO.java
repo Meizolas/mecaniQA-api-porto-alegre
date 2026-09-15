@@ -3,10 +3,6 @@ package br.com.mecaniqa.dto.pedidopeca;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DTO de requisição para adicionar novas peças a um pedido já aberto (US04).
- * O cliente informa uma lista de itens (codigoPeca + quantidade).
- */
 public class AdicionarItensPedidoRequestDTO {
 
     private List<ItemPedidoPecaRequestDTO> itens;
