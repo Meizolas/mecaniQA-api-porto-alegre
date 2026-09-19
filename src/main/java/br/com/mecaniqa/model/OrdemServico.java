@@ -1,7 +1,6 @@
 package br.com.mecaniqa.model;
 
 import java.time.LocalDate;
-import java.util.List;
 
 public class OrdemServico {
 
@@ -60,20 +59,6 @@ public class OrdemServico {
     public OrdemServico build() {
         return new OrdemServico(this);
     }
-    }
-
-    public OrdemServico(
-        Long id,
-        String descricaoProblema,
-        LocalDate dataAbertura,
-        StatusOrdemServico status,
-        double valor) {
-
-    this.id = id;
-    this.descricaoProblema = descricaoProblema;
-    this.dataAbertura = dataAbertura;
-    this.status = status;
-    this.valor = valor;
     }
 
     public Long getId() {

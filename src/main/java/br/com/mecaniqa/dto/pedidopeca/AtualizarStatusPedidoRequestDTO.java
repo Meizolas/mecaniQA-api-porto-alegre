@@ -4,16 +4,16 @@ import br.com.mecaniqa.model.StatusPedidoPeca;
 
 public class AtualizarStatusPedidoRequestDTO {
 
-    private StatusPedidoPeca novoStatus;
+    private StatusPedidoPeca status;
 
     public AtualizarStatusPedidoRequestDTO() {
     }
 
-    public StatusPedidoPeca getNovoStatus() {
-        return novoStatus;
+    public StatusPedidoPeca getStatus() {
+        return status;
     }
 
-    public void setNovoStatus(StatusPedidoPeca novoStatus) {
-        this.novoStatus = novoStatus;
+    public void setStatus(StatusPedidoPeca status) {
+        this.status = status;
     }
 }

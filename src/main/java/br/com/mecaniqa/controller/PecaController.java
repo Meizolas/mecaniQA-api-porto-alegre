@@ -42,24 +42,24 @@ public class PecaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Peca>> listar() {
-        return ResponseEntity.ok(repository.listar());
+    public ResponseEntity<List<PecaResponseDTO>> listar() {
+        return ResponseEntity.ok(repository.listar().stream().map(PecaMapper::paraResponseDTO).toList());
     }
 
     @GetMapping("/{codigo}")
-    public ResponseEntity<Peca> buscarPorCodigo(@PathVariable Long codigo) {
+    public ResponseEntity<PecaResponseDTO> buscarPorCodigo(@PathVariable Long codigo) {
         return repository.buscarPorCodigo(codigo)
-                .map(ResponseEntity::ok)
+                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{codigo}")
-    public ResponseEntity<Peca> atualizar(
+    public ResponseEntity<PecaResponseDTO> atualizar(
             @PathVariable Long codigo,
-            @RequestBody Peca novosDados) {
+            @RequestBody PecaRequestDTO dto) {
 
-        return repository.atualizar(codigo, novosDados)
-                .map(ResponseEntity::ok)
+        return repository.atualizar(codigo, PecaMapper.paraModel(dto))
+                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 

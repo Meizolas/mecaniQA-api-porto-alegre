@@ -11,116 +11,95 @@ import br.com.mecaniqa.model.Peca;
 import br.com.mecaniqa.model.PedidoPeca;
 import br.com.mecaniqa.repository.PecaRepository;
 import br.com.mecaniqa.repository.PedidoPecaRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 @RestController
-@RequestMapping("/api/pedidos-pecas")
+@RequestMapping("/api/pedidos")
 public class PedidoPecaController {
-
     private final PedidoPecaRepository pedidoRepository;
     private final PecaRepository pecaRepository;
 
     public PedidoPecaController() {
-        this.pedidoRepository = PedidoPecaRepository.getInstance();
-        this.pecaRepository = PecaRepository.getInstance();
+        pedidoRepository = PedidoPecaRepository.getInstance();
+        pecaRepository = PecaRepository.getInstance();
     }
 
     @PostMapping
     public ResponseEntity<?> criarPedido(@RequestBody PedidoPecaRequestDTO dto) {
-        PedidoPeca pedido = new PedidoPeca();
-
+        PedidoPeca pedido = PedidoPecaMapper.paraModel(dto);
         if (dto.getItens() != null && !dto.getItens().isEmpty()) {
+            if (possuiQuantidadeInvalida(dto.getItens())) return quantidadeInvalida();
             List<ItemPedidoPeca> itens = resolverItens(dto.getItens());
-            if (itens == null) {
-                return ResponseEntity
-                        .unprocessableEntity()
-                        .body("Uma ou mais peças informadas não foram encontradas.");
-            }
-            for (ItemPedidoPeca item : itens) {
-                pedido.adicionarItem(item);
-            }
+            if (itens == null) return ResponseEntity.notFound().build();
+            itens.forEach(pedido::adicionarItem);
         }
-
-        PedidoPeca pedidoSalvo = pedidoRepository.salvar(pedido);
-        PedidoPecaResponseDTO resposta = PedidoPecaMapper.paraResponseDTO(pedidoSalvo);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(PedidoPecaMapper.paraResponseDTO(pedidoRepository.salvar(pedido)));
     }
 
     @PostMapping("/{id}/itens")
     public ResponseEntity<?> adicionarItens(
-            @PathVariable Long id,
-            @RequestBody AdicionarItensPedidoRequestDTO dto) {
-
-        List<ItemPedidoPeca> itens = resolverItens(dto.getItens());
-        if (itens == null) {
-            return ResponseEntity
-                    .unprocessableEntity()
-                    .body("Uma ou mais peças informadas não foram encontradas.");
+            @PathVariable Long id, @RequestBody AdicionarItensPedidoRequestDTO dto) {
+        if (pedidoRepository.buscarPorId(id).isEmpty()) return ResponseEntity.notFound().build();
+        if (dto.getItens() == null || dto.getItens().isEmpty() || possuiQuantidadeInvalida(dto.getItens())) {
+            return quantidadeInvalida();
         }
-
-        Optional<PedidoPeca> pedidoAtualizado = pedidoRepository.adicionarItens(id, itens);
-
-        return pedidoAtualizado
-                .map(p -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(p)))
+        List<ItemPedidoPeca> itens = resolverItens(dto.getItens());
+        if (itens == null) return ResponseEntity.notFound().build();
+        return pedidoRepository.adicionarItens(id, itens)
+                .map(pedido -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(pedido)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PatchMapping("/{id}/status")
+    @PutMapping("/{id}/status")
     public ResponseEntity<?> atualizarStatus(
-            @PathVariable Long id,
-            @RequestBody AtualizarStatusPedidoRequestDTO dto) {
-
-        Optional<PedidoPeca> pedidoAtualizado =
-                pedidoRepository.atualizarStatus(id, dto.getNovoStatus());
-
-        return pedidoAtualizado
-                .map(p -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(p)))
+            @PathVariable Long id, @RequestBody AtualizarStatusPedidoRequestDTO dto) {
+        if (dto.getStatus() == null) return ResponseEntity.badRequest().body("O status é obrigatório.");
+        return pedidoRepository.atualizarStatus(id, dto.getStatus())
+                .map(pedido -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(pedido)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
     public ResponseEntity<List<PedidoPecaResponseDTO>> listar() {
-        List<PedidoPecaResponseDTO> resposta = new ArrayList<>();
-        for (PedidoPeca pedido : pedidoRepository.listar()) {
-            resposta.add(PedidoPecaMapper.paraResponseDTO(pedido));
-        }
-        return ResponseEntity.ok(resposta);
+        return ResponseEntity.ok(pedidoRepository.listar().stream()
+                .map(PedidoPecaMapper::paraResponseDTO).toList());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PedidoPecaResponseDTO> buscarPorId(@PathVariable Long id) {
         return pedidoRepository.buscarPorId(id)
-                .map(p -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(p)))
+                .map(pedido -> ResponseEntity.ok(PedidoPecaMapper.paraResponseDTO(pedido)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private List<ItemPedidoPeca> resolverItens(List<ItemPedidoPecaRequestDTO> dtos) {
         List<ItemPedidoPeca> itens = new ArrayList<>();
-
-        for (ItemPedidoPecaRequestDTO itemDTO : dtos) {
-            Optional<Peca> pecaEncontrada = pecaRepository.buscarPorCodigo(itemDTO.getCodigoPeca());
-
-            if (pecaEncontrada.isEmpty()) {
-                return null;
-            }
-
-            ItemPedidoPeca item = new ItemPedidoPeca(pecaEncontrada.get(), itemDTO.getQuantidade());
-            itens.add(item);
+        for (ItemPedidoPecaRequestDTO dto : dtos) {
+            Optional<Peca> peca = pecaRepository.buscarPorCodigo(dto.getCodigoPeca());
+            if (peca.isEmpty()) return null;
+            itens.add(new ItemPedidoPeca(peca.get(), dto.getQuantidade()));
         }
-
         return itens;
+    }
+
+    private boolean possuiQuantidadeInvalida(List<ItemPedidoPecaRequestDTO> itens) {
+        return itens.stream().anyMatch(item -> item.getCodigoPeca() == null
+                || item.getQuantidade() == null || item.getQuantidade() <= 0);
+    }
+
+    private ResponseEntity<String> quantidadeInvalida() {
+        return ResponseEntity.badRequest().body("Informe peças com código e quantidade maior que zero.");
     }
 }

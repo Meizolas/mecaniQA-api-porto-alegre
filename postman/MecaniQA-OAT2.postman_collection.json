@@ -1,0 +1,93 @@
+{
+  "info": {
+    "name": "MecaniQA - OAT2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "ordemId", "value": "1" },
+    { "key": "pedidoId", "value": "1" },
+    { "key": "codigoPeca", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Preparação - Cadastrar peça de apoio",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"codigoBarras\": \"OAT2-001\",\n  \"fornecedorMarca\": \"MecaniQA\",\n  \"quantidadeEstoque\": 10,\n  \"precoCusto\": 20.0,\n  \"precoVenda\": 35.0,\n  \"categoria\": \"MOTOR\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/pecas", "host": ["{{baseUrl}}"], "path": ["api", "pecas"] }
+      }
+    },
+    {
+      "name": "Criar Ordem de Serviço",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"descricaoProblema\": \"Ruído no motor\",\n  \"valor\": 350.0\n}" },
+        "url": { "raw": "{{baseUrl}}/api/ordens-servico", "host": ["{{baseUrl}}"], "path": ["api", "ordens-servico"] }
+      }
+    },
+    {
+      "name": "Alterar status da Ordem de Serviço",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"EM_EXECUCAO\" }" },
+        "url": { "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "ordens-servico", "{{ordemId}}", "status"] }
+      }
+    },
+    {
+      "name": "Criar Pedido",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"itens\": [] }" },
+        "url": { "raw": "{{baseUrl}}/api/pedidos", "host": ["{{baseUrl}}"], "path": ["api", "pedidos"] }
+      }
+    },
+    {
+      "name": "Adicionar peça ao Pedido",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPeca}}, \"quantidade\": 3 }] }" },
+        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
+      }
+    },
+    {
+      "name": "Alterar status do Pedido",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"status\": \"ENTREGUE\" }" },
+        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "status"] }
+      }
+    },
+    {
+      "name": "Pedido inexistente",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/pedidos/999999", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "999999"] }
+      }
+    },
+    {
+      "name": "Peça inexistente",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": 999999, \"quantidade\": 1 }] }" },
+        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
+      }
+    },
+    {
+      "name": "Quantidade inválida",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPeca}}, \"quantidade\": 0 }] }" },
+        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
+      }
+    }
+  ]
+}

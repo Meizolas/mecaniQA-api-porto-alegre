@@ -5,5 +5,5 @@ public enum StatusOrdemServico {
     PENDENTE_PAGAMENTO,
     PAGO,
     EM_EXECUCAO,
-    CONCLUIDO
+    EXECUTADO
 }
