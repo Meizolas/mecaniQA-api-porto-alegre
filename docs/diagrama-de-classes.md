@@ -146,7 +146,7 @@ class OrdemServico {
     -StatusOrdemServico status
     -double valor
     -OrdemServico(Builder builder)
-    +builder()$ : Builder
+    +Builder builder()$
     +Long getId()
     +void setId(Long id)
     +String getDescricaoProblema()
@@ -166,12 +166,12 @@ class Builder {
     -LocalDate dataAbertura
     -StatusOrdemServico status
     -double valor
-    +id(long id) : Builder
-    +descricaoProblema(String descricaoProblema) : Builder
-    +dataAbertura(LocalDate dataAbertura) : Builder
-    +status(StatusOrdemServico status) : Builder
-    +valor(double valor) : Builder
-    +build() : OrdemServico
+    +Builder id(long id)
+    +Builder descricaoProblema(String descricaoProblema)
+    +Builder dataAbertura(LocalDate dataAbertura)
+    +Builder status(StatusOrdemServico status)
+    +Builder valor(double valor)
+    +OrdemServico build()
 }
 
 class PecaRequestDTO {
@@ -520,7 +520,7 @@ ItemPedidoPeca --> Peca : peca
 PedidoPeca "1" *-- "0..*" ItemPedidoPeca : itens
 PedidoPeca --> StatusPedidoPeca : status
 OrdemServico --> StatusOrdemServico : status
-OrdemServico +-- Builder : possui
+OrdemServico *-- Builder : possui
 Builder ..> OrdemServico : cria
 
 PecaRequestDTO --> CategoriaPeca : categoria
