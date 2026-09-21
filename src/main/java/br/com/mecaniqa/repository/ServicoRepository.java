@@ -54,7 +54,7 @@ public class ServicoRepository {
         servico.setDescricao(novosDados.getDescricao());
         servico.setValorMaoDeObra(novosDados.getValorMaoDeObra());
         servico.setCustoTabelado(novosDados.getCustoTabelado());
-        servico.settempoEstimadoMinutos(novosDados.gettempoEstimadoMinutos());
+        servico.setTempoEstimadoMinutos(novosDados.getTempoEstimadoMinutos());
         servico.setPecasUtilizadas(novosDados.getPecasUtilizadas());
         servico.setDataAtualizacao(LocalDateTime.now());
         

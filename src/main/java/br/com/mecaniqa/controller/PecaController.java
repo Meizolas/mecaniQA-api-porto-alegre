@@ -1,5 +1,6 @@
 package br.com.mecaniqa.controller;
 
+import java.util.List;
 import br.com.mecaniqa.model.Peca;
 import br.com.mecaniqa.repository.PecaRepository;
 import org.springframework.http.HttpStatus;
@@ -12,8 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-
-import java.util.List;
+import br.com.mecaniqa.dto.peca.PecaRequestDTO;
+import br.com.mecaniqa.dto.peca.PecaResponseDTO;
+import br.com.mecaniqa.mapper.PecaMapper;
 
 @RestController
 @RequestMapping("/api/pecas")
@@ -26,27 +28,38 @@ public class PecaController {
     }
 
     @PostMapping
-    public ResponseEntity<Peca> cadastrar(@RequestBody Peca peca) {
+    public ResponseEntity<PecaResponseDTO> cadastrar(
+            @RequestBody PecaRequestDTO dto) {
+
+        Peca peca = PecaMapper.paraModel(dto);
+
         Peca pecaSalva = repository.salvar(peca);
-        return ResponseEntity.status(HttpStatus.CREATED).body(pecaSalva);
+
+        PecaResponseDTO resposta =
+                PecaMapper.paraResponseDTO(pecaSalva);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
     }
+
     @GetMapping
-    public ResponseEntity<List<Peca>> listar() {
-        return ResponseEntity.ok(repository.listar());
+    public ResponseEntity<List<PecaResponseDTO>> listar() {
+        return ResponseEntity.ok(repository.listar().stream().map(PecaMapper::paraResponseDTO).toList());
     }
+
     @GetMapping("/{codigo}")
-    public ResponseEntity<Peca> buscarPorCodigo(@PathVariable Long codigo) {
+    public ResponseEntity<PecaResponseDTO> buscarPorCodigo(@PathVariable Long codigo) {
         return repository.buscarPorCodigo(codigo)
-                .map(ResponseEntity::ok)
+                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-    @PutMapping("/{codigo}")
-    public ResponseEntity<Peca> atualizar(
-            @PathVariable Long codigo,
-            @RequestBody Peca novosDados) {
 
-        return repository.atualizar(codigo, novosDados)
-                .map(ResponseEntity::ok)
+    @PutMapping("/{codigo}")
+    public ResponseEntity<PecaResponseDTO> atualizar(
+            @PathVariable Long codigo,
+            @RequestBody PecaRequestDTO dto) {
+
+        return repository.atualizar(codigo, PecaMapper.paraModel(dto))
+                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
