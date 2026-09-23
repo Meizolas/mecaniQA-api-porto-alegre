@@ -1,93 +1,1876 @@
 {
   "info": {
     "name": "MecaniQA - OAT2",
+    "description": "Collection de testes da OAT 2 (Padrão de Projeto e Diagrama de Atividade).\n\nComo usar: suba a API (gradlew bootRun) e rode a collection inteira no Collection Runner, na ordem. Os IDs (peças, OS e pedido) são capturados automaticamente nas variáveis da collection.\n\nCobertura: US01, US02, US03, US04, US05 + cenários do QA (DTO ignora campos internos; mesma peça várias vezes no pedido) + caminhos de erro (400/404).\n\nResponsável: Marcelo Henrique Fernandes (Testes, integração e Postman).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Tempo de resposta < 2s\", () => pm.expect(pm.response.responseTime).to.be.below(2000));"
+        ]
+      }
+    }
+  ],
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "ordemId", "value": "1" },
-    { "key": "pedidoId", "value": "1" },
-    { "key": "codigoPeca", "value": "1" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "codigoPecaA",
+      "value": ""
+    },
+    {
+      "key": "codigoPecaB",
+      "value": ""
+    },
+    {
+      "key": "ordemId",
+      "value": ""
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    },
+    {
+      "key": "pedidoComItensId",
+      "value": ""
+    }
   ],
   "item": [
     {
-      "name": "Preparação - Cadastrar peça de apoio",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"codigoBarras\": \"OAT2-001\",\n  \"fornecedorMarca\": \"MecaniQA\",\n  \"quantidadeEstoque\": 10,\n  \"precoCusto\": 20.0,\n  \"precoVenda\": 35.0,\n  \"categoria\": \"MOTOR\"\n}" },
-        "url": { "raw": "{{baseUrl}}/api/pecas", "host": ["{{baseUrl}}"], "path": ["api", "pecas"] }
-      }
+      "name": "00 - Preparação (peças de apoio)",
+      "description": "Cadastra duas peças usadas pelos pedidos. Rode sempre antes das pastas de Pedido.",
+      "item": [
+        {
+          "name": "Cadastrar peça A - Filtro de óleo (R$ 35,00)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"OAT2-FILTRO\",\n  \"fornecedorMarca\": \"MecaniQA\",\n  \"quantidadeEstoque\": 10,\n  \"precoCusto\": 20.0,\n  \"precoVenda\": 35.0,\n  \"tamanho\": \"M\",\n  \"cor\": \"Preto\",\n  \"categoria\": \"MOTOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Retorna código gerado e precoVenda 35\", () => {",
+                  "    pm.expect(body.codigo).to.be.a(\"number\");",
+                  "    pm.expect(body.precoVenda).to.eql(35.0);",
+                  "});",
+                  "pm.collectionVariables.set(\"codigoPecaA\", body.codigo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar peça B - Pastilha de freio (R$ 80,00)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigoBarras\": \"OAT2-PASTILHA\",\n  \"fornecedorMarca\": \"MecaniQA\",\n  \"quantidadeEstoque\": 8,\n  \"precoCusto\": 50.0,\n  \"precoVenda\": 80.0,\n  \"tamanho\": \"G\",\n  \"cor\": \"Cinza\",\n  \"categoria\": \"FREIOS\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Retorna código gerado\", () => pm.expect(body.codigo).to.be.a(\"number\"));",
+                  "pm.collectionVariables.set(\"codigoPecaB\", body.codigo);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
-      "name": "Criar Ordem de Serviço",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{\n  \"descricaoProblema\": \"Ruído no motor\",\n  \"valor\": 350.0\n}" },
-        "url": { "raw": "{{baseUrl}}/api/ordens-servico", "host": ["{{baseUrl}}"], "path": ["api", "ordens-servico"] }
-      }
+      "name": "US01 - Criar Ordem de Serviço",
+      "description": "POST /api/ordens-servico -> 201 Created. A OS é construída pelo Builder dentro do OrdemServicoMapper.",
+      "item": [
+        {
+          "name": "Criar OS - sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricaoProblema\": \"Ruído no motor\",\n  \"valor\": 350.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Status inicial é ABERTO\", () => pm.expect(body.status).to.eql(\"ABERTO\"));",
+                  "pm.test(\"Gera id e data de abertura\", () => {",
+                  "    pm.expect(body.id).to.be.a(\"number\");",
+                  "    pm.expect(body.dataAbertura).to.match(/^\\d{4}-\\d{2}-\\d{2}$/);",
+                  "});",
+                  "pm.test(\"Devolve os dados enviados\", () => {",
+                  "    pm.expect(body.descricaoProblema).to.eql(\"Ruído no motor\");",
+                  "    pm.expect(body.valor).to.eql(350.0);",
+                  "});",
+                  "pm.test(\"Resposta contém apenas campos do DTO\", () => {",
+                  "    pm.expect(Object.keys(body)).to.have.members([\"id\", \"descricaoProblema\", \"dataAbertura\", \"status\", \"valor\"]);",
+                  "});",
+                  "pm.collectionVariables.set(\"ordemId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar OS - DTO ignora atributos internos (cenário QA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 999,\n  \"status\": \"PAGO\",\n  \"dataAbertura\": \"2000-01-01\",\n  \"descricaoProblema\": \"Troca de óleo\",\n  \"valor\": 120.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "O OrdemServicoRequestDTO só aceita descricaoProblema e valor. Os demais campos do JSON são descartados e a API não quebra."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"id enviado pelo cliente é ignorado\", () => pm.expect(body.id).to.not.eql(999));",
+                  "pm.test(\"status enviado é ignorado: nasce ABERTO\", () => pm.expect(body.status).to.eql(\"ABERTO\"));",
+                  "pm.test(\"dataAbertura enviada é ignorada\", () => pm.expect(body.dataAbertura).to.not.eql(\"2000-01-01\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar OS - sem valor (padrão 0.0)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"descricaoProblema\": \"Diagnóstico eletrônico\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"valor padrão 0\", () => pm.expect(body.valor).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar OS - JSON malformado (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"descricaoProblema\": ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
-      "name": "Alterar status da Ordem de Serviço",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"status\": \"EM_EXECUCAO\" }" },
-        "url": { "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "ordens-servico", "{{ordemId}}", "status"] }
-      }
+      "name": "US02 - Modificar status da OS",
+      "description": "PUT /api/ordens-servico/{id}/status -> 200 OK. Percorre todo o ciclo de status obrigatórios.",
+      "item": [
+        {
+          "name": "Alterar status OS -> PENDENTE_PAGAMENTO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDENTE_PAGAMENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é PENDENTE_PAGAMENTO\", () => pm.expect(body.status).to.eql(\"PENDENTE_PAGAMENTO\"));",
+                  "pm.test(\"Mesma OS\", () => pm.expect(body.id).to.eql(Number(pm.collectionVariables.get(\"ordemId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS -> PAGO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAGO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é PAGO\", () => pm.expect(body.status).to.eql(\"PAGO\"));",
+                  "pm.test(\"Mesma OS\", () => pm.expect(body.id).to.eql(Number(pm.collectionVariables.get(\"ordemId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS -> EM_EXECUCAO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EM_EXECUCAO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é EM_EXECUCAO\", () => pm.expect(body.status).to.eql(\"EM_EXECUCAO\"));",
+                  "pm.test(\"Mesma OS\", () => pm.expect(body.id).to.eql(Number(pm.collectionVariables.get(\"ordemId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS -> EXECUTADO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"EXECUTADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é EXECUTADO\", () => pm.expect(body.status).to.eql(\"EXECUTADO\"));",
+                  "pm.test(\"Mesma OS\", () => pm.expect(body.id).to.eql(Number(pm.collectionVariables.get(\"ordemId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar OS - confirma status persistido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status persistido é EXECUTADO\", () => pm.expect(body.status).to.eql(\"EXECUTADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS - sem status (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS - status inválido (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status OS - OS inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/999999/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "999999",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAGO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar OS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Lista contém a OS criada\", () => pm.expect(body.map(o => o.id)).to.include(Number(pm.collectionVariables.get(\"ordemId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar OS inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
-      "name": "Criar Pedido",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"itens\": [] }" },
-        "url": { "raw": "{{baseUrl}}/api/pedidos", "host": ["{{baseUrl}}"], "path": ["api", "pedidos"] }
-      }
+      "name": "US03 - Criar Pedido de Peças",
+      "description": "POST /api/pedidos -> 201 Created. Pedido nasce com status ORCANDO.",
+      "item": [
+        {
+          "name": "Criar pedido vazio - sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Status inicial é ORCANDO\", () => pm.expect(body.status).to.eql(\"ORCANDO\"));",
+                  "pm.test(\"Sem itens e total 0\", () => {",
+                  "    pm.expect(body.itens).to.be.an(\"array\").that.is.empty;",
+                  "    pm.expect(body.valorTotal).to.eql(0);",
+                  "});",
+                  "pm.test(\"Datas de criação/atualização preenchidas\", () => {",
+                  "    pm.expect(body.dataCriacao).to.be.a(\"string\");",
+                  "    pm.expect(body.dataUltimaAtualizacao).to.be.a(\"string\");",
+                  "});",
+                  "pm.collectionVariables.set(\"pedidoId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar pedido já com peças - sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    { \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 2 },\n    { \"codigoPeca\": {{codigoPecaB}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Dois itens na entidade associativa\", () => pm.expect(body.itens).to.have.lengthOf(2));",
+                  "pm.test(\"Subtotais calculados (2x35 e 1x80)\", () => {",
+                  "    pm.expect(body.itens[0].subtotal).to.eql(70);",
+                  "    pm.expect(body.itens[1].subtotal).to.eql(80);",
+                  "});",
+                  "pm.test(\"Valor total = 150\", () => pm.expect(body.valorTotal).to.eql(150));",
+                  "pm.collectionVariables.set(\"pedidoComItensId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar pedido - status enviado é ignorado (cenário QA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 777,\n  \"status\": \"ENTREGUE\",\n  \"itens\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Nasce ORCANDO mesmo enviando ENTREGUE\", () => pm.expect(body.status).to.eql(\"ORCANDO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar pedido - peça inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"codigoPeca\": 999999,\n      \"quantidade\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar pedido - quantidade zero (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 0 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensagem de validação\", () => pm.expect(pm.response.text()).to.include(\"quantidade maior que zero\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
-      "name": "Adicionar peça ao Pedido",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPeca}}, \"quantidade\": 3 }] }" },
-        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
-      }
+      "name": "US04 - Adicionar peças a um pedido",
+      "description": "POST /api/pedidos/{id}/itens -> 200 OK. Cada peça vira um ItemPedidoPeca (entidade associativa) com quantidade e preço unitário.",
+      "item": [
+        {
+          "name": "Adicionar peça A x3 - sucesso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 3 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Pedido tem 1 item\", () => pm.expect(body.itens).to.have.lengthOf(1));",
+                  "pm.test(\"Item referencia a peça A\", () => {",
+                  "    pm.expect(body.itens[0].codigoPeca).to.eql(Number(pm.collectionVariables.get(\"codigoPecaA\")));",
+                  "    pm.expect(body.itens[0].codigoBarrasPeca).to.eql(\"OAT2-FILTRO\");",
+                  "});",
+                  "pm.test(\"Quantidade, preço unitário e subtotal\", () => {",
+                  "    pm.expect(body.itens[0].quantidade).to.eql(3);",
+                  "    pm.expect(body.itens[0].precoUnitario).to.eql(35);",
+                  "    pm.expect(body.itens[0].subtotal).to.eql(105);",
+                  "});",
+                  "pm.test(\"Valor total = 105\", () => pm.expect(body.valorTotal).to.eql(105));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar a MESMA peça A de novo (cenário QA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 2 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Valida o cenário do QA: é possível adicionar a mesma peça múltiplas vezes a um pedido através da entidade associativa."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Mesma peça aparece em 2 itens distintos\", () => {",
+                  "    const itensA = body.itens.filter(i => i.codigoPeca === Number(pm.collectionVariables.get(\"codigoPecaA\")));",
+                  "    pm.expect(itensA).to.have.lengthOf(2);",
+                  "    pm.expect(itensA[0].id).to.not.eql(itensA[1].id);",
+                  "});",
+                  "pm.test(\"Valor total = 175 (5 x 35)\", () => pm.expect(body.valorTotal).to.eql(175));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar várias peças diferentes numa requisição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    { \"codigoPeca\": {{codigoPecaB}}, \"quantidade\": 2 },\n    { \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Pedido agora tem 4 itens\", () => pm.expect(body.itens).to.have.lengthOf(4));",
+                  "pm.test(\"Valor total = 175 + 160 + 35 = 370\", () => pm.expect(body.valorTotal).to.eql(370));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - pedido inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/999999/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "999999",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 1 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - peça inexistente (404)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"codigoPeca\": 999999,\n      \"quantidade\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - quantidade zero (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": 0 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - quantidade negativa (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPecaA}}, \"quantidade\": -5 }] }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - lista vazia (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar - item sem codigoPeca (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "itens"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itens\": [\n    {\n      \"quantidade\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar pedido - itens não mudaram após erros",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test(\"Continua com 4 itens e total 370\", () => {",
+                  "    pm.expect(body.itens).to.have.lengthOf(4);",
+                  "    pm.expect(body.valorTotal).to.eql(370);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     },
     {
-      "name": "Alterar status do Pedido",
-      "request": {
-        "method": "PUT",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"status\": \"ENTREGUE\" }" },
-        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "status"] }
-      }
-    },
-    {
-      "name": "Pedido inexistente",
-      "request": {
-        "method": "GET",
-        "url": { "raw": "{{baseUrl}}/api/pedidos/999999", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "999999"] }
-      }
-    },
-    {
-      "name": "Peça inexistente",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": 999999, \"quantidade\": 1 }] }" },
-        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
-      }
-    },
-    {
-      "name": "Quantidade inválida",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": { "mode": "raw", "raw": "{ \"itens\": [{ \"codigoPeca\": {{codigoPeca}}, \"quantidade\": 0 }] }" },
-        "url": { "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/itens", "host": ["{{baseUrl}}"], "path": ["api", "pedidos", "{{pedidoId}}", "itens"] }
-      }
+      "name": "US05 - Modificar status do Pedido",
+      "description": "PUT /api/pedidos/{id}/status -> 200 OK. Percorre os status obrigatórios.",
+      "item": [
+        {
+          "name": "Alterar status pedido -> PENDENTE_PAGAMENTO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDENTE_PAGAMENTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é PENDENTE_PAGAMENTO\", () => pm.expect(body.status).to.eql(\"PENDENTE_PAGAMENTO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido -> PAGO_FATURADO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PAGO_FATURADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é PAGO_FATURADO\", () => pm.expect(body.status).to.eql(\"PAGO_FATURADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido -> ENTREGUE",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ENTREGUE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é ENTREGUE\", () => pm.expect(body.status).to.eql(\"ENTREGUE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar pedido - confirma ENTREGUE",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status persistido é ENTREGUE\", () => pm.expect(body.status).to.eql(\"ENTREGUE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido -> ORCANDO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ORCANDO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status agora é ORCANDO\", () => pm.expect(body.status).to.eql(\"ORCANDO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido - sem status (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Mensagem de status obrigatório\", () => pm.expect(pm.response.text()).to.include(\"status\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido - status inválido (400)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Alterar status pedido - pedido inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/999999/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "999999",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ENTREGUE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Lista contém o pedido\", () => pm.expect(body.map(p => p.id)).to.include(Number(pm.collectionVariables.get(\"pedidoId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar pedido inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
