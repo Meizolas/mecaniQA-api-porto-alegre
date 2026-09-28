@@ -408,6 +408,7 @@ class ServicoMapper {
 
 class PedidoPecaMapper {
     +PedidoPeca paraModel(PedidoPecaRequestDTO dto)$
+    +ItemPedidoPeca paraItemModel(ItemPedidoPecaRequestDTO dto, Peca peca)$
     +ItemPedidoPecaResponseDTO paraItemResponseDTO(ItemPedidoPeca item)$
     +PedidoPecaResponseDTO paraResponseDTO(PedidoPeca pedido)$
 }
@@ -453,8 +454,8 @@ class PedidoPecaRepository {
     -PedidoPecaRepository()
     +PedidoPecaRepository getInstance()$
     +PedidoPeca salvar(PedidoPeca pedido)
-    +PedidoPeca adicionarItens(Long idPedido, List~ItemPedidoPeca~ itens)
-    +Optional~PedidoPeca~ atualizarStatus(Long idPedido, StatusPedidoPeca status)
+    +Optional~PedidoPeca~ adicionarItens(Long id, List~ItemPedidoPeca~ itens)
+    +Optional~PedidoPeca~ atualizarStatus(Long id, StatusPedidoPeca status)
     +List~PedidoPeca~ listar()
     +Optional~PedidoPeca~ buscarPorId(Long id)
 }
@@ -495,14 +496,14 @@ class PedidoPecaController {
     -PedidoPecaRepository pedidoRepository
     -PecaRepository pecaRepository
     +PedidoPecaController()
-    +ResponseEntity~PedidoPecaResponseDTO~ criarPedido(PedidoPecaRequestDTO dto)
-    +ResponseEntity~PedidoPecaResponseDTO~ adicionarItens(Long idPedido, AdicionarItensPedidoRequestDTO dto)
-    +ResponseEntity~PedidoPecaResponseDTO~ atualizarStatus(Long idPedido, AtualizarStatusPedidoRequestDTO dto)
+    +ResponseEntity~?~ criarPedido(PedidoPecaRequestDTO dto)
+    +ResponseEntity~?~ adicionarItens(Long id, AdicionarItensPedidoRequestDTO dto)
+    +ResponseEntity~?~ atualizarStatus(Long id, AtualizarStatusPedidoRequestDTO dto)
     +ResponseEntity~List~PedidoPecaResponseDTO~~ listar()
     +ResponseEntity~PedidoPecaResponseDTO~ buscarPorId(Long id)
     -List~ItemPedidoPeca~ resolverItens(List~ItemPedidoPecaRequestDTO~ itens)
     -boolean possuiQuantidadeInvalida(List~ItemPedidoPecaRequestDTO~ itens)
-    -boolean quantidadeInvalida(ItemPedidoPecaRequestDTO item)
+    -ResponseEntity~String~ quantidadeInvalida()
 }
 
 class OrdemServicoController {
@@ -542,6 +543,8 @@ ServicoMapper ..> ServicoResponseDTO : produz
 PedidoPecaMapper ..> PedidoPeca : converte
 PedidoPecaMapper ..> ItemPedidoPeca : converte
 PedidoPecaMapper ..> PedidoPecaRequestDTO : recebe
+PedidoPecaMapper ..> ItemPedidoPecaRequestDTO : recebe
+PedidoPecaMapper ..> Peca : utiliza
 PedidoPecaMapper ..> ItemPedidoPecaResponseDTO : produz
 PedidoPecaMapper ..> PedidoPecaResponseDTO : produz
 OrdemServicoMapper ..> OrdemServico : converte

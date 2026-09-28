@@ -1,10 +1,12 @@
 package br.com.mecaniqa.mapper;
 
+import br.com.mecaniqa.dto.pedidopeca.ItemPedidoPecaRequestDTO;
 import br.com.mecaniqa.dto.pedidopeca.ItemPedidoPecaResponseDTO;
 import br.com.mecaniqa.dto.pedidopeca.PedidoPecaResponseDTO;
 import br.com.mecaniqa.dto.pedidopeca.PedidoPecaRequestDTO;
 import br.com.mecaniqa.model.ItemPedidoPeca;
 import br.com.mecaniqa.model.PedidoPeca;
+import br.com.mecaniqa.model.Peca;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,5 +50,11 @@ public class PedidoPecaMapper {
         dto.setItens(itensDTO);
 
         return dto;
+    }
+
+    public static ItemPedidoPeca paraItemModel(
+        ItemPedidoPecaRequestDTO dto,
+        Peca peca) {
+        return new ItemPedidoPeca(peca, dto.getQuantidade());
     }
 }

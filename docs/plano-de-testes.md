@@ -64,6 +64,6 @@ Linha de comando (opcional): `npx newman run postman/MecaniQA-OAT2.postman_colle
 
 ## 6. Observações encontradas durante os testes
 
-- `PecaMapper` e `PedidoPecaMapper` não têm construtor privado nem `final` (os outros dois mappers têm). Sugestão para ficar igual ao barema de "classe utilitária": `public final class PecaMapper { private PecaMapper() {} ... }`.
+- Todos os Mappers expõem as conversões por métodos `static`, conforme a decisão registrada no Caderno de Guias. O uso de classe `final` e construtor privado é apenas uma padronização opcional, não uma exigência explícita da OAT 2.
 - US04 fala em adicionar peças "a um pedido já aberto", mas hoje o endpoint aceita adicionar itens mesmo com o pedido `ENTREGUE`. Se a equipe quiser, dá para devolver 400/409 quando o status não for `ORCANDO`.
 - O item do pedido guarda o preço da peça no momento da inclusão (`precoUnitario`). Mudanças posteriores no preço da peça não alteram pedidos já montados – comportamento testado e desejado.

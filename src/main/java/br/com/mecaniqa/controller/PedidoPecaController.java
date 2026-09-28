@@ -89,7 +89,7 @@ public class PedidoPecaController {
         for (ItemPedidoPecaRequestDTO dto : dtos) {
             Optional<Peca> peca = pecaRepository.buscarPorCodigo(dto.getCodigoPeca());
             if (peca.isEmpty()) return null;
-            itens.add(new ItemPedidoPeca(peca.get(), dto.getQuantidade()));
+            itens.add(PedidoPecaMapper.paraItemModel(dto, peca.get()));
         }
         return itens;
     }
