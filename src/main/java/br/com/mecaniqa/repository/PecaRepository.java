@@ -1,11 +1,11 @@
 package br.com.mecaniqa.repository;
 
-import br.com.mecaniqa.model.Peca;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import br.com.mecaniqa.model.Peca;
+
 
 public class PecaRepository {
 
@@ -75,4 +75,22 @@ public class PecaRepository {
                 peca -> peca.getCodigo().equals(codigo)
         );
     }
+
+    public int contar() {
+
+        String sql = "SELECT COUNT(*) FROM pecas";
+
+        try (
+            var conexao = br.com.mecaniqa.config.Conexao.getConnection();
+            var statement = conexao.prepareStatement(sql);
+            var resultado = statement.executeQuery()
+        ){
+            resultado.next();
+            return resultado.getInt(1);
+        } catch (java.sql.SQLException e) {
+            throw new RuntimeException(
+                "Erro ao conectar ou consultar o banco de dados", e);
+        }
+    }
+
 }
