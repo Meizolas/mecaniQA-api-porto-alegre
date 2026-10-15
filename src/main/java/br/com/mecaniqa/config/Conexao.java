@@ -8,6 +8,7 @@ public class Conexao {
     private Conexao() {
     }
 
+//Tem que adicionar variável nos dados sensíveis, usuário e senha!!!
     public static Connection getConnection() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/mecaniqa";
         String usuario = "root";
