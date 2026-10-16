@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import br.com.mecaniqa.model.Peca;
+import br.com.mecaniqa.config.Conexao;
+import br.com.mecaniqa.mapper.PecaResultSetMapper;
+import java.sql.SQLException;
 
 
 public class PecaRepository {
@@ -93,4 +96,30 @@ public class PecaRepository {
         }
     }
 
+    public Optional<Peca> findById(Long codigo) {
+    String sql = "SELECT * FROM pecas WHERE codigo = ?";
+
+    try (
+            var conexao = Conexao.getConnection();
+            var statement = conexao.prepareStatement(sql)
+    ) {
+        statement.setLong(1, codigo);
+
+        try (var resultado = statement.executeQuery()) {
+            if (resultado.next()) {
+                return Optional.of(
+                        PecaResultSetMapper.toModel(resultado)
+                );
+            }
+
+            return Optional.empty();
+        }
+
+    } catch (SQLException e) {
+        throw new RuntimeException(
+                "Erro ao buscar peça no banco de dados.",
+                e
+        );
+    }
+}
 }

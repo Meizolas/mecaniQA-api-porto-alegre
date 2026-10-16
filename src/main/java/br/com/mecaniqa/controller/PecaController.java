@@ -1,30 +1,27 @@
 package br.com.mecaniqa.controller;
 
-import java.util.List;
-import br.com.mecaniqa.model.Peca;
-import br.com.mecaniqa.repository.PecaRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import br.com.mecaniqa.dto.peca.PecaRequestDTO;
 import br.com.mecaniqa.dto.peca.PecaResponseDTO;
+import br.com.mecaniqa.exception.DadosInvalidosException;
+import br.com.mecaniqa.exception.PecaNaoEncontradaException;
 import br.com.mecaniqa.mapper.PecaMapper;
+import br.com.mecaniqa.model.Peca;
+import br.com.mecaniqa.service.PecaService;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/pecas")
 public class PecaController {
 
-    private final PecaRepository repository;
+    private final PecaService service;
 
     public PecaController() {
-        this.repository = PecaRepository.getInstance();
+        service = new PecaService();
     }
 
     @PostMapping
@@ -32,25 +29,39 @@ public class PecaController {
             @RequestBody PecaRequestDTO dto) {
 
         Peca peca = PecaMapper.paraModel(dto);
+        Peca pecaSalva = service.cadastrar(peca);
 
-        Peca pecaSalva = repository.salvar(peca);
-
-        PecaResponseDTO resposta =
-                PecaMapper.paraResponseDTO(pecaSalva);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(PecaMapper.paraResponseDTO(pecaSalva));
     }
 
     @GetMapping
     public ResponseEntity<List<PecaResponseDTO>> listar() {
-        return ResponseEntity.ok(repository.listar().stream().map(PecaMapper::paraResponseDTO).toList());
+        List<PecaResponseDTO> resposta = service.listar()
+                .stream()
+                .map(PecaMapper::paraResponseDTO)
+                .toList();
+
+        return ResponseEntity.ok(resposta);
     }
 
     @GetMapping("/{codigo}")
-    public ResponseEntity<PecaResponseDTO> buscarPorCodigo(@PathVariable Long codigo) {
-        return repository.buscarPorCodigo(codigo)
-                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<PecaResponseDTO> buscarPorCodigo(
+            @PathVariable Long codigo) {
+
+        try {
+            Peca peca = service.buscarPorCodigo(codigo);
+
+            return ResponseEntity.ok(
+                    PecaMapper.paraResponseDTO(peca)
+            );
+
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (PecaNaoEncontradaException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{codigo}")
@@ -58,19 +69,36 @@ public class PecaController {
             @PathVariable Long codigo,
             @RequestBody PecaRequestDTO dto) {
 
-        return repository.atualizar(codigo, PecaMapper.paraModel(dto))
-                .map(peca -> ResponseEntity.ok(PecaMapper.paraResponseDTO(peca)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        try {
+            Peca novosDados = PecaMapper.paraModel(dto);
+            Peca peca = service.atualizar(codigo, novosDados);
+
+            return ResponseEntity.ok(
+                    PecaMapper.paraResponseDTO(peca)
+            );
+
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (PecaNaoEncontradaException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{codigo}")
-    public ResponseEntity<Void> excluir(@PathVariable Long codigo) {
-        boolean excluiu = repository.excluir(codigo);
+    public ResponseEntity<Void> excluir(
+            @PathVariable Long codigo) {
 
-        if (excluiu) {
+        try {
+            service.excluir(codigo);
+
             return ResponseEntity.noContent().build();
-        }
 
-        return ResponseEntity.notFound().build();
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.badRequest().build();
+
+        } catch (PecaNaoEncontradaException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
