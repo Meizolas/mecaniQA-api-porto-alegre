@@ -4,13 +4,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import br.com.mecaniqa.model.Peca;
 import br.com.mecaniqa.config.Conexao;
 import br.com.mecaniqa.mapper.PecaResultSetMapper;
-import java.sql.SQLException;
 
 
-public class PecaRepository {
+
+public class PecaRepository extends ConsultaJdbcTemplate {
 
     private static PecaRepository instance;
 
@@ -83,43 +87,57 @@ public class PecaRepository {
 
         String sql = "SELECT COUNT(*) FROM pecas";
 
-        try (
-            var conexao = br.com.mecaniqa.config.Conexao.getConnection();
-            var statement = conexao.prepareStatement(sql);
-            var resultado = statement.executeQuery()
-        ){
-            resultado.next();
-            return resultado.getInt(1);
-        } catch (java.sql.SQLException e) {
-            throw new RuntimeException(
-                "Erro ao conectar ou consultar o banco de dados", e);
-        }
-    }
+        return executarConsulta(
+            sql, 
+            new Consulta<Integer>() {
 
-    public Optional<Peca> findById(Long codigo) {
-    String sql = "SELECT * FROM pecas WHERE codigo = ?";
+                @Override
+                public void preencherParametros(
+                    PreparedStatement statement){
+                    // Esta consulta não possui parâmetros!!
+                }
 
-    try (
-            var conexao = Conexao.getConnection();
-            var statement = conexao.prepareStatement(sql)
-    ) {
-        statement.setLong(1, codigo);
-
-        try (var resultado = statement.executeQuery()) {
-            if (resultado.next()) {
-                return Optional.of(
-                        PecaResultSetMapper.toModel(resultado)
-                );
-            }
-
-            return Optional.empty();
-        }
-
-    } catch (SQLException e) {
-        throw new RuntimeException(
-                "Erro ao buscar peça no banco de dados.",
-                e
+                @Override
+                public Integer mapearResultado(
+                    ResultSet resultado)
+                    throws SQLException {
+                    resultado.next();
+                    return resultado.getInt(1);
+                    }
+                }
         );
     }
+
+
+   public Optional<Peca> findById(Long codigo) {
+    String sql = "SELECT * FROM pecas WHERE codigo = ?";
+
+    return executarConsulta(
+            sql,
+            new Consulta<Optional<Peca>>() {
+
+                @Override
+                public void preencherParametros(
+                        PreparedStatement statement)
+                        throws SQLException {
+
+                    statement.setLong(1, codigo);
+                }
+
+                @Override
+                public Optional<Peca> mapearResultado(
+                        ResultSet resultado)
+                        throws SQLException {
+
+                    if (resultado.next()) {
+                        return Optional.of(
+                                PecaResultSetMapper.toModel(resultado)
+                        );
+                    }
+
+                    return Optional.empty();
+                }
+            }
+    );
 }
 }
