@@ -124,8 +124,6 @@ public class OrdemServicoRepository
         String sql = """
                 UPDATE ordens_servico
                 SET descricao_problema = ?,
-                    data_abertura = ?,
-                    status = ?,
                     valor = ?
                 WHERE id = ?
                 """;
@@ -133,8 +131,9 @@ public class OrdemServicoRepository
         executarAtualizacao(
                 sql,
                 statement -> {
-                    preencherDados(statement, ordem);
-                    statement.setLong(5, ordem.getId());
+                    statement.setString(1, ordem.getDescricaoProblema());
+                    statement.setBigDecimal(2, BigDecimal.valueOf(ordem.getValor()));
+                    statement.setLong(3, ordem.getId());
                 }
         );
 

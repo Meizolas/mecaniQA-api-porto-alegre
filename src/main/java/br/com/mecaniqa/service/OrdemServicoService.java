@@ -14,7 +14,33 @@ public class OrdemServicoService {
     private final OrdemServicoRepository repository;
 
     public OrdemServicoService() {
-        repository = OrdemServicoRepository.getInstance();
+        this(OrdemServicoRepository.getInstance());
+    }
+
+    public OrdemServicoService(OrdemServicoRepository repository) {
+        this.repository = repository;
+    }
+
+    public Optional<OrdemServico> atualizar(Long id, String descricaoProblema, Double valor) {
+        if (descricaoProblema == null || descricaoProblema.isBlank()
+                || valor == null || !Double.isFinite(valor) || valor < 0) {
+            throw new DadosInvalidosException(
+                    "Informe a descrição do problema e um valor válido maior ou igual a zero.");
+        }
+
+        return repository.buscarPorId(id).map(ordem -> {
+            ordem.setDescricaoProblema(descricaoProblema);
+            ordem.setValor(valor);
+            return repository.update(ordem);
+        });
+    }
+
+    public boolean excluir(Long id) {
+        if (!repository.existsById(id)) {
+            return false;
+        }
+        repository.deleteById(id);
+        return true;
     }
 
     public OrdemServico criar(OrdemServico ordem) {

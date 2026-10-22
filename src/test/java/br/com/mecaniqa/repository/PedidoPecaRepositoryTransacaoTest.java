@@ -22,6 +22,23 @@ import static org.mockito.Mockito.when;
 
 class PedidoPecaRepositoryTransacaoTest {
 
+    @Test
+    void deveExcluirSomentePedidoDeixandoItensParaCascade() throws SQLException {
+        Connection conexao = mock(Connection.class);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        when(conexao.prepareStatement("DELETE FROM pedidos_pecas WHERE id = ?"))
+                .thenReturn(statement);
+
+        new RepositorioTeste(conexao).deleteById(8L);
+
+        verify(conexao).prepareStatement("DELETE FROM pedidos_pecas WHERE id = ?");
+        verify(conexao).close();
+        org.mockito.Mockito.verifyNoMoreInteractions(conexao);
+        verify(statement).setLong(1, 8L);
+        verify(statement).executeUpdate();
+        verify(statement).close();
+    }
+
     private static class RepositorioTeste extends PedidoPecaRepository {
         private final Connection conexao;
 

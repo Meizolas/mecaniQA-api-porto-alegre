@@ -20,8 +20,20 @@ public class PedidoPecaService {
     private final PecaRepository pecaRepository;
 
     public PedidoPecaService() {
-        pedidoRepository = PedidoPecaRepository.getInstance();
-        pecaRepository = PecaRepository.getInstance();
+        this(PedidoPecaRepository.getInstance(), PecaRepository.getInstance());
+    }
+
+    public PedidoPecaService(PedidoPecaRepository pedidoRepository, PecaRepository pecaRepository) {
+        this.pedidoRepository = pedidoRepository;
+        this.pecaRepository = pecaRepository;
+    }
+
+    public boolean excluir(Long id) {
+        if (!pedidoRepository.existsById(id)) {
+            return false;
+        }
+        pedidoRepository.deleteById(id);
+        return true;
     }
 
     public PedidoPeca criar(PedidoPeca pedido, List<ItemPedidoPecaRequestDTO> itens) {
