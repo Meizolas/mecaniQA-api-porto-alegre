@@ -13,6 +13,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,7 +28,30 @@ public class OrdemServicoController {
     private final OrdemServicoService service;
 
     public OrdemServicoController() {
-        service = new OrdemServicoService();
+        this(new OrdemServicoService());
+    }
+
+    public OrdemServicoController(OrdemServicoService service) {
+        this.service = service;
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrdemServicoResponseDTO> atualizar(
+            @PathVariable Long id, @RequestBody OrdemServicoRequestDTO dto) {
+        try {
+            return service.atualizar(id, dto.getDescricaoProblema(), dto.getValor())
+                    .map(ordem -> ResponseEntity.ok(OrdemServicoMapper.paraResponseDTO(ordem)))
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (DadosInvalidosException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        return service.excluir(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 
     @PostMapping
