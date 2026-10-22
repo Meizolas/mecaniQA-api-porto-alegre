@@ -16,22 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositório JDBC de pedidos de peças.
- *
- * Usa o ConsultaJdbcTemplate (Template Method) para abrir/fechar
- * conexão, statement e result set, e implementa a interface
- * genérica Repository. Um pedido é gravado em duas tabelas:
- * pedidos_pecas (cabeçalho) e itens_pedido_peca (entidade associativa
- * entre pedido e peça).
- */
+
 public class PedidoPecaRepository
         extends ConsultaJdbcTemplate
         implements Repository<PedidoPeca, Long> {
 
     private static PedidoPecaRepository instance;
 
-    private PedidoPecaRepository() {
+    protected PedidoPecaRepository() {
     }
 
     public static PedidoPecaRepository getInstance() {
@@ -42,9 +34,6 @@ public class PedidoPecaRepository
         return instance;
     }
 
-    // ---------------------------------------------------------------
-    // Métodos da interface Repository
-    // ---------------------------------------------------------------
 
     @Override
     public PedidoPeca save(PedidoPeca pedido) {
@@ -64,18 +53,19 @@ public class PedidoPecaRepository
             pedido.setStatus(StatusPedidoPeca.ORCANDO);
         }
 
-        long id = executarInsercao(
-                sql,
-                statement -> preencherDados(statement, pedido)
-        );
+        return executarTransacao(conexao -> {
+            long id = executarInsercao(
+                    conexao,
+                    sql,
+                    statement -> preencherDados(statement, pedido)
+            );
+            pedido.setId(id);
 
-        pedido.setId(id);
-
-        for (ItemPedidoPeca item : pedido.getItens()) {
-            inserirItem(id, item);
-        }
-
-        return pedido;
+            for (ItemPedidoPeca item : pedido.getItens()) {
+                inserirItem(conexao, id, item);
+            }
+            return pedido;
+        });
     }
 
     @Override
@@ -156,16 +146,11 @@ public class PedidoPecaRepository
         return pedidos;
     }
 
-    /**
-     * Atualiza os dados do cabeçalho do pedido (status e data).
-     * Os itens são incluídos pelo método adicionarItens.
-     */
     @Override
     public PedidoPeca update(PedidoPeca pedido) {
         String sql = """
                 UPDATE pedidos_pecas
                 SET status = ?,
-                    data_criacao = ?,
                     data_ultima_atualizacao = ?
                 WHERE id = ?
                 """;
@@ -175,8 +160,12 @@ public class PedidoPecaRepository
         executarAtualizacao(
                 sql,
                 statement -> {
-                    preencherDados(statement, pedido);
-                    statement.setLong(4, pedido.getId());
+                    statement.setString(1, pedido.getStatus().name());
+                    statement.setTimestamp(
+                            2,
+                            Timestamp.valueOf(pedido.getDataUltimaAtualizacao())
+                    );
+                    statement.setLong(3, pedido.getId());
                 }
         );
 
@@ -185,12 +174,7 @@ public class PedidoPecaRepository
 
     @Override
     public void deleteById(Long id) {
-        // Remove primeiro os itens por causa da chave estrangeira.
-        executarAtualizacao(
-                "DELETE FROM itens_pedido_peca WHERE pedido_id = ?",
-                statement -> statement.setLong(1, id)
-        );
-
+        // A chave estrangeira dos itens possui ON DELETE CASCADE.
         executarAtualizacao(
                 "DELETE FROM pedidos_pecas WHERE id = ?",
                 statement -> statement.setLong(1, id)
@@ -229,11 +213,6 @@ public class PedidoPecaRepository
         );
     }
 
-    // ---------------------------------------------------------------
-    // Métodos usados pelo PedidoPecaController (mantidos para não
-    // quebrar a camada de cima)
-    // ---------------------------------------------------------------
-
     public PedidoPeca salvar(PedidoPeca pedido) {
         return save(pedido);
     }
@@ -250,15 +229,30 @@ public class PedidoPecaRepository
             Long id,
             List<ItemPedidoPeca> itens) {
 
-        if (!existsById(id)) {
+        boolean atualizado = executarTransacao(conexao -> {
+            int existe = executarAtualizacao(
+                    conexao,
+                    """
+                    UPDATE pedidos_pecas
+                    SET data_ultima_atualizacao = ?
+                    WHERE id = ?
+                    """,
+                    statement -> {
+                        statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+                        statement.setLong(2, id);
+                    });
+            if (existe == 0) {
+                return false;
+            }
+            for (ItemPedidoPeca item : itens) {
+                inserirItem(conexao, id, item);
+            }
+            return true;
+        });
+
+        if (!atualizado) {
             return Optional.empty();
         }
-
-        for (ItemPedidoPeca item : itens) {
-            inserirItem(id, item);
-        }
-
-        tocarDataAtualizacao(id);
 
         return findById(id);
     }
@@ -292,12 +286,10 @@ public class PedidoPecaRepository
 
         return findById(id);
     }
-
-    // ---------------------------------------------------------------
-    // Itens do pedido (tabela itens_pedido_peca)
-    // ---------------------------------------------------------------
-
-    private void inserirItem(Long pedidoId, ItemPedidoPeca item) {
+    private void inserirItem(
+            java.sql.Connection conexao,
+            Long pedidoId,
+            ItemPedidoPeca item) throws SQLException {
         String sql = """
                 INSERT INTO itens_pedido_peca (
                     pedido_id,
@@ -308,6 +300,7 @@ public class PedidoPecaRepository
                 """;
 
         long idItem = executarInsercao(
+                conexao,
                 sql,
                 statement -> {
                     statement.setLong(1, pedidoId);
@@ -370,23 +363,6 @@ public class PedidoPecaRepository
 
                         return itens;
                     }
-                }
-        );
-    }
-
-    private void tocarDataAtualizacao(Long id) {
-        executarAtualizacao(
-                """
-                UPDATE pedidos_pecas
-                SET data_ultima_atualizacao = ?
-                WHERE id = ?
-                """,
-                statement -> {
-                    statement.setTimestamp(
-                            1,
-                            Timestamp.valueOf(LocalDateTime.now())
-                    );
-                    statement.setLong(2, id);
                 }
         );
     }

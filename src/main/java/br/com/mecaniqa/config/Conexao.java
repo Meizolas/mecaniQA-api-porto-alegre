@@ -12,7 +12,7 @@ public class Conexao {
     public static Connection getConnection() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/mecaniqa";
         String usuario = "root";
-        String senha = "200905Ke.";
+        String senha = "JUNIOR12345678";
 
         if (url == null || usuario == null || senha == null) {
             throw new SQLException(

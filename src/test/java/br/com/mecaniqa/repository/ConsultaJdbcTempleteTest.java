@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,6 +48,21 @@ class ConsultaJdbcTemplateTest {
                         }
                     }
             );
+        }
+
+        long inserir() {
+            return executarInsercao(
+                    "INSERT INTO teste(valor) VALUES (?)",
+                    statement -> statement.setString(1, "valor"));
+        }
+
+        String transacionar(boolean falhar) {
+            return executarTransacao(conexao -> {
+                if (falhar) {
+                    throw new SQLException("Falha simulada");
+                }
+                return "ok";
+            });
         }
     }
 
@@ -132,6 +148,59 @@ class ConsultaJdbcTemplateTest {
 
         verify(resultado).close();
         verify(statement).close();
+        verify(conexao).close();
+    }
+
+    @Test
+    void deveFecharStatementChavesEConexaoNaInsercao()
+            throws SQLException {
+        Connection conexao = mock(Connection.class);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        ResultSet chaves = mock(ResultSet.class);
+
+        when(conexao.prepareStatement(
+                anyString(), eq(Statement.RETURN_GENERATED_KEYS)))
+                .thenReturn(statement);
+        when(statement.executeUpdate()).thenReturn(1);
+        when(statement.getGeneratedKeys()).thenReturn(chaves);
+        when(chaves.next()).thenReturn(true);
+        when(chaves.getLong(1)).thenReturn(9L);
+
+        assertEquals(9L, new ConsultaTeste(conexao).inserir());
+
+        verify(chaves).close();
+        verify(statement).close();
+        verify(conexao).close();
+    }
+
+    @Test
+    void deveConfirmarTransacaoEFecharConexao()
+            throws SQLException {
+        Connection conexao = mock(Connection.class);
+        when(conexao.getAutoCommit()).thenReturn(true);
+
+        assertEquals("ok", new ConsultaTeste(conexao).transacionar(false));
+
+        verify(conexao).setAutoCommit(false);
+        verify(conexao).commit();
+        verify(conexao, never()).rollback();
+        verify(conexao).setAutoCommit(true);
+        verify(conexao).close();
+    }
+
+    @Test
+    void deveFazerRollbackEFecharConexaoQuandoTransacaoFalha()
+            throws SQLException {
+        Connection conexao = mock(Connection.class);
+        when(conexao.getAutoCommit()).thenReturn(true);
+
+        assertThrows(
+                RuntimeException.class,
+                () -> new ConsultaTeste(conexao).transacionar(true));
+
+        verify(conexao, never()).commit();
+        verify(conexao).rollback();
+        verify(conexao).setAutoCommit(true);
         verify(conexao).close();
     }
 }

@@ -42,3 +42,25 @@ CREATE TABLE IF NOT EXISTS itens_pedido_peca (
     CONSTRAINT fk_item_peca FOREIGN KEY (codigo_peca)
         REFERENCES pecas (codigo)
 );
+
+CREATE TABLE IF NOT EXISTS servicos (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    descricao TEXT,
+    valor_mao_de_obra DECIMAL(12,2),
+    custo_tabelado DECIMAL(12,2),
+    tempo_estimado_minutos DOUBLE,
+    data_cadastro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS ordens_servico (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    descricao_problema TEXT,
+    data_abertura DATE NOT NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'ABERTO',
+    valor DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+
+    PRIMARY KEY (id)
+);

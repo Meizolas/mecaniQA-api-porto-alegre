@@ -1,12 +1,12 @@
 package br.com.mecaniqa.repository;
 
 import br.com.mecaniqa.model.Servico;
+import br.com.mecaniqa.mapper.ServicoResultSetMapper;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +47,8 @@ public class ServicoRepository
         );
 
         servico.setId(id);
-        return findById(id).orElse(servico);
+        return findById(id).orElseThrow(
+                () -> new IllegalStateException("O servico inserido nao foi encontrado."));
     }
 
     @Override
@@ -73,7 +74,7 @@ public class ServicoRepository
 
                         if (resultado.next()) {
                             return Optional.of(
-                                    mapearServico(resultado)
+                                    ServicoResultSetMapper.toModel(resultado)
                             );
                         }
 
@@ -105,7 +106,7 @@ public class ServicoRepository
 
                         while (resultado.next()) {
                             servicos.add(
-                                    mapearServico(resultado)
+                                    ServicoResultSetMapper.toModel(resultado)
                             );
                         }
 
@@ -127,7 +128,7 @@ public class ServicoRepository
                 WHERE id = ?
                 """;
 
-        executarAtualizacao(
+        int linhas = executarAtualizacao(
                 sql,
                 statement -> {
                     preencherDados(statement, servico);
@@ -135,7 +136,11 @@ public class ServicoRepository
                 }
         );
 
-        return findById(servico.getId()).orElse(servico);
+        if (linhas == 0) {
+            throw new IllegalStateException("O servico a atualizar nao existe.");
+        }
+        return findById(servico.getId()).orElseThrow(
+                () -> new IllegalStateException("O servico atualizado nao foi encontrado."));
     }
 
     @Override
@@ -180,6 +185,34 @@ public class ServicoRepository
         );
     }
 
+    public Servico salvar(Servico servico) {
+        return save(servico);
+    }
+
+    public List<Servico> listar() {
+        return findAll();
+    }
+
+    public Optional<Servico> buscarPorId(Long id) {
+        return findById(id);
+    }
+
+    public Optional<Servico> atualizar(Long id, Servico novosDados) {
+        if (!existsById(id)) {
+            return Optional.empty();
+        }
+        novosDados.setId(id);
+        return Optional.of(update(novosDados));
+    }
+
+    public boolean excluir(Long id) {
+        if (!existsById(id)) {
+            return false;
+        }
+        deleteById(id);
+        return true;
+    }
+
     private void preencherDados(
             PreparedStatement statement,
             Servico servico)
@@ -209,49 +242,4 @@ public class ServicoRepository
         );
     }
 
-    private Servico mapearServico(ResultSet resultado)
-            throws SQLException {
-
-        Servico servico = new Servico();
-
-        servico.setId(resultado.getLong("id"));
-        servico.setDescricao(resultado.getString("descricao"));
-
-        BigDecimal valorMaoDeObra =
-                resultado.getBigDecimal("valor_mao_de_obra");
-
-        BigDecimal custoTabelado =
-                resultado.getBigDecimal("custo_tabelado");
-
-        BigDecimal tempoEstimado =
-                resultado.getBigDecimal("tempo_estimado_minutos");
-
-        servico.setValorMaoDeObra(
-                valorMaoDeObra == null ? null : valorMaoDeObra.doubleValue()
-        );
-
-        servico.setCustoTabelado(
-                custoTabelado == null ? null : custoTabelado.doubleValue()
-        );
-
-        servico.setTempoEstimadoMinutos(
-                tempoEstimado == null ? null : tempoEstimado.doubleValue()
-        );
-
-        Timestamp cadastro =
-                resultado.getTimestamp("data_cadastro");
-
-        Timestamp atualizacao =
-                resultado.getTimestamp("data_atualizacao");
-
-        servico.setDataCadastro(
-                cadastro == null ? null : cadastro.toLocalDateTime()
-        );
-
-        servico.setDataAtualizacao(
-                atualizacao == null ? null : atualizacao.toLocalDateTime()
-        );
-
-        return servico;
-    }
 }
