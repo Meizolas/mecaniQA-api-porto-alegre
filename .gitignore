@@ -18,3 +18,5 @@ Thumbs.db
 gradle.properties
 
 context.md
+
+.env
