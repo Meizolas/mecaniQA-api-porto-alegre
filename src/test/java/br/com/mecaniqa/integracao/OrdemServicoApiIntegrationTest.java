@@ -12,6 +12,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.mecaniqa.model.StatusOrdemServico;
 import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
+import br.com.mecaniqa.suporte.LimpezaApi;
+import br.com.mecaniqa.suporte.TesteIntegracao;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Sobe o contexto Spring completo e dispara requisições reais via MockMvc,
  * validando verbos, status HTTP e o JSON devolvido (somente DTOs).
  */
+@TesteIntegracao
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Integração - Ordem de Serviço (US01 e US02)")
@@ -38,6 +43,19 @@ class OrdemServicoApiIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    private LimpezaApi limpeza;
+
+    @BeforeEach
+    void registrarEstadoInicial() throws Exception {
+        limpeza = new LimpezaApi(mockMvc, LimpezaApi.PEDIDOS, LimpezaApi.ORDENS, LimpezaApi.PECAS);
+        limpeza.registrarEstadoInicial();
+    }
+
+    @AfterEach
+    void removerDadosCriadosNoTeste() throws Exception {
+        limpeza.removerCriadosNoTeste();
+    }
 
     // ---------------------------------------------------------------- US01
 
@@ -94,7 +112,7 @@ class OrdemServicoApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("US01 - IDs gerados são sequenciais e não se repetem")
+    @DisplayName("US01 - IDs gerados pelo banco são crescentes e não se repetem")
     void deveGerarIdsDiferentes() throws Exception {
         long id1 = idDe(criarOrdemERetornarJson("OS A"));
         long id2 = idDe(criarOrdemERetornarJson("OS B"));
@@ -124,7 +142,7 @@ class OrdemServicoApiIntegrationTest {
     }
 
     @Test
-    @DisplayName("US02 - Status alterado fica persistido no repositório em memória (GET confirma)")
+    @DisplayName("US02 - Status alterado fica persistido no banco (GET confirma)")
     void statusAlteradoDevePersistir() throws Exception {
         long id = idDe(criarOrdemERetornarJson("Revisão 10.000 km"));
 

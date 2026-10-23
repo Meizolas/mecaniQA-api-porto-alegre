@@ -12,6 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import br.com.mecaniqa.model.StatusPedidoPeca;
 import com.jayway.jsonpath.JsonPath;
+import br.com.mecaniqa.suporte.LimpezaApi;
+import br.com.mecaniqa.suporte.TesteIntegracao;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * US03 (criar pedido), US04 (adicionar peças via entidade associativa ItemPedidoPeca)
  * e US05 (modificar status do pedido).
  */
+@TesteIntegracao
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Integração - Pedido de Peças (US03, US04 e US05)")
@@ -39,13 +43,22 @@ class PedidoPecaApiIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private LimpezaApi limpeza;
+
     private long pecaFiltro;   // preço de venda 35.0
     private long pecaPastilha; // preço de venda 80.0
 
     @BeforeEach
     void cadastrarPecasDeApoio() throws Exception {
+        limpeza = new LimpezaApi(mockMvc, LimpezaApi.PEDIDOS, LimpezaApi.PECAS);
+        limpeza.registrarEstadoInicial();
         pecaFiltro = cadastrarPeca("FILTRO-OLEO", 35.0);
         pecaPastilha = cadastrarPeca("PASTILHA-FREIO", 80.0);
+    }
+
+    @AfterEach
+    void removerDadosCriadosNoTeste() throws Exception {
+        limpeza.removerCriadosNoTeste();
     }
 
     // ---------------------------------------------------------------- US03

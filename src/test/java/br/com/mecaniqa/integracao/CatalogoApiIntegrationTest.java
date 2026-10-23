@@ -8,6 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import br.com.mecaniqa.suporte.LimpezaApi;
+import br.com.mecaniqa.suporte.TesteIntegracao;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Regressão da OAT 1: garante que o CRUD de Peças e Serviços continua
  * funcionando depois da migração para DTOs/Mappers feita na OAT 2.
  */
+@TesteIntegracao
 @SpringBootTest
 @AutoConfigureMockMvc
 @DisplayName("Integração - Regressão CRUD de Peças e Serviços (OAT 1)")
@@ -27,6 +32,19 @@ class CatalogoApiIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    private LimpezaApi limpeza;
+
+    @BeforeEach
+    void registrarEstadoInicial() throws Exception {
+        limpeza = new LimpezaApi(mockMvc, LimpezaApi.PECAS);
+        limpeza.registrarEstadoInicial();
+    }
+
+    @AfterEach
+    void removerPecasCriadasNoTeste() throws Exception {
+        limpeza.removerCriadosNoTeste();
+    }
 
     @Test
     @DisplayName("Peça: POST 201 -> GET 200 -> PUT 200 -> DELETE 204 -> GET 404")

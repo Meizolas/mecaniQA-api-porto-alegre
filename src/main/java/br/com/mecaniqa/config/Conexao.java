@@ -15,10 +15,9 @@ public class Conexao {
     public static Connection getConnection() 
     throws SQLException {
         
-        String url = "jdbc:mysql://localhost:3306/mecaniqa";
-        
-        Dotenv dotenv = Dotenv.configure().load();
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
+        String url = dotenv.get("DB_URL");
         String usuario = dotenv.get("DB_USER");
         String senha = dotenv.get("DB_PASSWORD");
 
