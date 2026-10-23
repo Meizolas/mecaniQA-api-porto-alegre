@@ -1,0 +1,405 @@
+{
+  "info": {
+    "_postman_id": "663c8179-9c95-46cd-9707-0dfe14cbb7fb",
+    "name": "MecaniQA - OAT3 - Validação Final",
+    "description": "# MecaniQA API — OAT 3 — Validação Final\n\nCollection destinada à validação final da persistência com **MySQL e JDBC manual** no projeto MecaniQA API.\n\nEsta collection valida as operações adicionadas para completar os CRUDs de **Ordens de Serviço** e **Pedidos de Peças**, preservando as rotas e os formatos JSON existentes.\n\n## Endereço padrão\n\nPor padrão, a aplicação Spring Boot utiliza:\n\n```text\nhttp://localhost:8080\n```\n\nA collection utiliza a variável:\n\n```text\n{{baseUrl}}\n```\n\nValor padrão para versionamento:\n\n```text\nhttp://localhost:8080\n```\n\n> Caso a porta `8080` esteja ocupada, a aplicação pode ser iniciada em outra\n> porta. Nesse caso, altere localmente a variável `baseUrl`. Essa alteração\n> local não deve substituir o valor padrão versionado da collection.\n\nExemplo de execução na porta `8081`:\n\n```powershell\n.\\gradlew.bat bootRun --args=\"--server.port=8081\"\n```\n\nValor local correspondente:\n\n```text\nhttp://localhost:8081\n```\n\n## Pré-requisitos\n\n1. MySQL em execução.\n2. Banco `mecaniqa` criado com `script_mecaniqa.sql`.\n3. Aplicação Spring Boot em execução.\n4. Configuração local de conexão com o MySQL.\n5. Postman Desktop Agent em execução quando a collection for usada pelo navegador.\n6. Nenhuma senha ou credencial deve ser armazenada nesta collection.\n\n## Variáveis\n\n| Variável | Finalidade | Valor inicial |\n|---|---|---|\n| `baseUrl` | Endereço base da API | `http://localhost:8080` |\n| `pecaId` | Código da peça criada para o teste | vazio |\n| `ordemId` | ID da Ordem de Serviço criada | vazio |\n| `ordemDataAbertura` | Data original da OS | vazio |\n| `ordemStatus` | Status original da OS | vazio |\n| `pedidoId` | ID do pedido criado | vazio |\n\nAs variáveis de identificação são preenchidas automaticamente pelos scripts das requisições.\n\n## Objetivos\n\nA collection verifica:\n\n- criação de uma peça de apoio;\n- criação de uma Ordem de Serviço;\n- atualização completa de uma Ordem de Serviço;\n- preservação do ID, data de abertura e status;\n- persistência da atualização no MySQL;\n- exclusão da Ordem de Serviço;\n- retorno `404 Not Found` após a exclusão;\n- criação de pedido com itens;\n- mesma peça em linhas repetidas;\n- preservação do preço registrado;\n- cálculo do valor total;\n- exclusão do pedido;\n- exclusão dos itens por `ON DELETE CASCADE`;\n- retorno `404 Not Found` após excluir o pedido;\n- remoção dos registros temporários.\n\n# Fluxo de execução\n\n## 01 — Criar peça de apoio\n\n```http\nPOST {{baseUrl}}/api/pecas\n```\n\nCria uma peça com preço de venda igual a `100.0`.\n\nResultado esperado:\n\n- HTTP `201 Created`;\n- código gerado pelo MySQL;\n- código armazenado em `pecaId`.\n\n## 02 — Criar Ordem de Serviço\n\n```http\nPOST {{baseUrl}}/api/ordens-servico\n```\n\nResultado esperado:\n\n- HTTP `201 Created`;\n- ID gerado;\n- status inicial `ABERTO`;\n- data de abertura preenchida;\n- valores armazenados em `ordemId`, `ordemDataAbertura` e `ordemStatus`.\n\n## 03 — Atualizar Ordem de Serviço\n\n```http\nPUT {{baseUrl}}/api/ordens-servico/{{ordemId}}\n```\n\nResultado esperado:\n\n- HTTP `200 OK`;\n- descrição atualizada;\n- valor atualizado para `250.0`;\n- ID preservado;\n- data de abertura preservada;\n- status preservado.\n\n## 04 — Consultar OS atualizada\n\n```http\nGET {{baseUrl}}/api/ordens-servico/{{ordemId}}\n```\n\nResultado esperado:\n\n- HTTP `200 OK`;\n- descrição atualizada;\n- valor igual a `250.0`;\n- alteração persistida no MySQL.\n\n## 05 — Excluir Ordem de Serviço\n\n```http\nDELETE {{baseUrl}}/api/ordens-servico/{{ordemId}}\n```\n\nResultado esperado:\n\n- HTTP `204 No Content`;\n- resposta sem corpo;\n- registro removido do MySQL.\n\n## 06 — Confirmar exclusão da OS\n\n```http\nDELETE {{baseUrl}}/api/ordens-servico/{{ordemId}}\n```\n\nResultado esperado:\n\n- HTTP `404 Not Found`.\n\n## 07 — Criar pedido com itens\n\n```http\nPOST {{baseUrl}}/api/pedidos\n```\n\nO pedido utiliza duas linhas da mesma peça:\n\n- primeira linha com quantidade `1`;\n- segunda linha com quantidade `2`;\n- preço unitário registrado igual a `100.0`;\n- valor total igual a `300.0`.\n\nResultado esperado:\n\n- HTTP `201 Created`;\n- status inicial `ORCANDO`;\n- dois itens;\n- ID armazenado em `pedidoId`.\n\n## 08 — Consultar pedido\n\n```http\nGET {{baseUrl}}/api/pedidos/{{pedidoId}}\n```\n\nResultado esperado:\n\n- HTTP `200 OK`;\n- dois itens;\n- mesma peça nas duas linhas;\n- quantidades preservadas;\n- preço unitário preservado;\n- total igual a `300.0`.\n\n## 09 — Excluir pedido\n\n```http\nDELETE {{baseUrl}}/api/pedidos/{{pedidoId}}\n```\n\nResultado esperado:\n\n- HTTP `204 No Content`;\n- resposta sem corpo;\n- pedido removido;\n- itens removidos por `ON DELETE CASCADE`.\n\n## 10 — Confirmar exclusão do pedido\n\n```http\nDELETE {{baseUrl}}/api/pedidos/{{pedidoId}}\n```\n\nResultado esperado:\n\n- HTTP `404 Not Found`.\n\n## 11 — Remover peça de apoio\n\n```http\nDELETE {{baseUrl}}/api/pecas/{{pecaId}}\n```\n\nResultado esperado:\n\n- HTTP `204 No Content`;\n- peça temporária removida;\n- banco limpo após os testes.\n\n# Validação no MySQL\n\nDepois de criar o pedido e antes de excluí-lo:\n\n```sql\nSELECT *\nFROM mecaniqa.pedidos_pecas\nWHERE id = SEU_PEDIDO_ID;\n\nSELECT *\nFROM mecaniqa.itens_pedido_peca\nWHERE pedido_id = SEU_PEDIDO_ID\nORDER BY id;\n```\n\nResultado esperado:\n\n- um pedido;\n- dois itens;\n- mesma peça nas duas linhas;\n- quantidades `1` e `2`;\n- preço unitário `100.00`.\n\nDepois de excluir o pedido:\n\n```sql\nSELECT *\nFROM mecaniqa.pedidos_pecas\nWHERE id = SEU_PEDIDO_ID;\n\nSELECT *\nFROM mecaniqa.itens_pedido_peca\nWHERE pedido_id = SEU_PEDIDO_ID;\n```\n\nAs duas consultas devem retornar zero registros.\n\nIsso comprova que:\n\n1. o pedido foi excluído;\n2. os itens foram excluídos;\n3. a constraint `ON DELETE CASCADE` funcionou;\n4. não permaneceram dados parciais.\n\n# Ordem obrigatória\n\n1. Criar peça de apoio.\n2. Criar Ordem de Serviço.\n3. Atualizar Ordem de Serviço.\n4. Consultar OS atualizada.\n5. Excluir Ordem de Serviço.\n6. Confirmar `404` para a OS.\n7. Criar pedido com itens.\n8. Consultar pedido.\n9. Excluir pedido.\n10. Confirmar `404` para o pedido.\n11. Remover peça de apoio.\n\n# Critérios de aprovação\n\nA validação será aprovada quando:\n\n- todos os status HTTP forem os esperados;\n- a OS preservar ID, data e status na atualização;\n- a atualização permanecer salva no MySQL;\n- a OS excluída retornar `404`;\n- o pedido aceitar a mesma peça em linhas repetidas;\n- os itens preservarem o preço registrado;\n- o valor total estiver correto;\n- pedido e itens forem removidos;\n- o cascade for confirmado no MySQL;\n- o pedido excluído retornar `404`;\n- os dados temporários forem removidos ao final.\n\n# Observações de segurança\n\n- Não armazenar usuário ou senha do MySQL.\n- Não armazenar conteúdo do arquivo `.env`.\n- Não executar testes destrutivos em bancos importantes.\n- A collection cria e remove somente seus próprios registros temporários.\n- O valor padrão versionado de `baseUrl` deve permanecer `http://localhost:8080`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38777629"
+  },
+  "item": [
+    {
+      "name": "01 - CRUD final OAT3",
+      "item": [
+        {
+          "name": "01 - Criar peça de apoio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\n\r\npm.test(\"Peça recebeu código\", function () {\r\n    pm.expect(resposta.codigo).to.be.a(\"number\");\r\n});\r\n\r\npm.collectionVariables.set(\"pecaId\", resposta.codigo);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"codigoBarras\": \"OAT3-COLLECTION-{{$timestamp}}\",\r\n  \"fornecedorMarca\": \"Bosch\",\r\n  \"quantidadeEstoque\": 10,\r\n  \"precoCusto\": 50.0,\r\n  \"precoVenda\": 100.0,\r\n  \"tamanho\": \"M\",\r\n  \"cor\": \"Preto\",\r\n  \"categoria\": \"MOTOR\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Criar Ordem de Serviço",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\n\r\npm.test(\"OS possui ID, data e status\", function () {\r\n    pm.expect(resposta.id).to.be.a(\"number\");\r\n    pm.expect(resposta.dataAbertura).to.exist;\r\n    pm.expect(resposta.status).to.exist;\r\n});\r\n\r\npm.collectionVariables.set(\"ordemId\", resposta.id);\r\npm.collectionVariables.set(\"ordemDataAbertura\", resposta.dataAbertura);\r\npm.collectionVariables.set(\"ordemStatus\", resposta.status);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"descricaoProblema\": \"Teste da collection OAT 3\",\r\n  \"valor\": 100.0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 - Atualizar Ordem de Serviço",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\n\r\npm.test(\"Atualizou descrição e valor\", function () {\r\n    pm.expect(resposta.descricaoProblema)\r\n        .to.eql(\"Problema atualizado pela collection\");\r\n\r\n    pm.expect(resposta.valor).to.eql(250.0);\r\n});\r\n\r\npm.test(\"Preservou ID, data e status\", function () {\r\n    pm.expect(resposta.id)\r\n        .to.eql(Number(pm.collectionVariables.get(\"ordemId\")));\r\n\r\n    pm.expect(resposta.dataAbertura)\r\n        .to.eql(pm.collectionVariables.get(\"ordemDataAbertura\"));\r\n\r\n    pm.expect(resposta.status)\r\n        .to.eql(pm.collectionVariables.get(\"ordemStatus\"));\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"descricaoProblema\": \"Problema atualizado pela collection\",\r\n  \"valor\": 250.0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Consultar OS atualizada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\n\r\npm.test(\"Alteração ficou persistida\", function () {\r\n    pm.expect(resposta.descricaoProblema)\r\n        .to.eql(\"Problema atualizado pela collection\");\r\n\r\n    pm.expect(resposta.valor).to.eql(250.0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Excluir Ordem de Serviço",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 204 No Content\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\n\r\npm.test(\"Resposta não possui corpo\", function () {\r\n    pm.expect(pm.response.text()).to.eql(\"\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 - OS excluída retorna 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Criar pedido com itens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\nconst pecaId = Number(pm.collectionVariables.get(\"pecaId\"));\r\n\r\npm.test(\"Pedido possui duas linhas da mesma peça\", function () {\r\n    pm.expect(resposta.itens).to.have.lengthOf(2);\r\n    pm.expect(resposta.itens[0].codigoPeca).to.eql(pecaId);\r\n    pm.expect(resposta.itens[1].codigoPeca).to.eql(pecaId);\r\n});\r\n\r\npm.test(\"Quantidades estão corretas\", function () {\r\n    pm.expect(resposta.itens[0].quantidade).to.eql(1);\r\n    pm.expect(resposta.itens[1].quantidade).to.eql(2);\r\n});\r\n\r\npm.test(\"Preços registrados estão corretos\", function () {\r\n    pm.expect(resposta.itens[0].precoUnitario).to.eql(100.0);\r\n    pm.expect(resposta.itens[1].precoUnitario).to.eql(100.0);\r\n});\r\n\r\npm.test(\"Valor total é 300\", function () {\r\n    pm.expect(resposta.valorTotal).to.eql(300.0);\r\n});\r\n\r\npm.collectionVariables.set(\"pedidoId\", resposta.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"itens\": [\r\n    {\r\n      \"codigoPeca\": {{pecaId}},\r\n      \"quantidade\": 1\r\n    },\r\n    {\r\n      \"codigoPeca\": {{pecaId}},\r\n      \"quantidade\": 2\r\n    }\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Consultar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\nconst resposta = pm.response.json();\r\n\r\npm.test(\"Pedido continua com dois itens\", function () {\r\n    pm.expect(resposta.itens).to.have.lengthOf(2);\r\n});\r\n\r\npm.test(\"Valor total continua igual a 300\", function () {\r\n    pm.expect(resposta.valorTotal).to.eql(300.0);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Excluir pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 204 No Content\", function () {\r\n    pm.response.to.have.status(204);\r\n});\r\n\r\npm.test(\"Resposta não possui corpo\", function () {\r\n    pm.expect(pm.response.text()).to.eql(\"\");\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Pedido excluído retorna 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Retorna 404 Not Found\", function () {\r\n    pm.response.to.have.status(404);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pedidos/{{pedidoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pedidos",
+                "{{pedidoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - Remover peça de apoio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Peça de apoio foi removida\", function () {\r\n    pm.response.to.have.status(204);\r\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pecas/{{pecaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pecas",
+                "{{pecaId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "pecaId",
+      "value": ""
+    },
+    {
+      "key": "ordemId",
+      "value": ""
+    },
+    {
+      "key": "ordemDataAbertura",
+      "value": ""
+    },
+    {
+      "key": "ordemStatus",
+      "value": ""
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    }
+  ]
+}
