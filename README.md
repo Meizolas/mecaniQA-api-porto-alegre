@@ -1,26 +1,90 @@
-# MecâniQA - Automotive Tech
+# MecaniQA API
 
-## Sobre a empresa
+API REST para gerenciamento de uma oficina mecânica. O sistema permite cadastrar peças e serviços, controlar ordens de serviço e registrar pedidos de peças com seus respectivos itens.
 
-A MecâniQA - Automotive Tech é uma empresa feirense situada na Avenida Visconde do Rio Branco, 1273 - Baraúna, Feira de Santana - BA, 44020-012. Somos uma startup que vem atuando na cidade de Feira de Santana e região com uma solução para gestão de lojas de autopeças, auto centers e oficinas mecânicas. Estamos há pelo menos 3 anos no mercado e vamos iniciar, neste segundo semestre, o nosso programa de trainee. Parabéns por terem sido selecionados. Abaixo, nós vamos explicar o modo como trabalhamos na empresa, como vocês serão avaliados no nosso programa e quais os desafios que serão propostos para vocês.
+Os dados são persistidos em um banco **MySQL** por meio de **JDBC**, seguindo uma organização em camadas (`controller`, `service`, `repository`, `mapper`, `dto` e `model`).
 
-## Sobre o projeto
+## Tecnologias
 
-### Contexto Inicial do Produto
-Os projetos deste programa serão implementados em grupos de 5 membros. Não são 4 membros, nem tão pouco 6 membros, mas 5. Exceções devem ser comunicadas ao orientador e registradas e autorizadas por ele. Cada time vai ter um nome conforme planilha: Nome dos Times e Seus Membros. Os nomes dos times serão sorteados no nosso primeiro encontro.
-Nossa base de clientes está crescendo, e precisamos construir a primeira versão do nosso sistema interno de gerenciamento de estoque e serviços (o MVP - Minimum Viable Product). Para garantir que a base do nosso software seja sólida e executada com o máximo de performance inicial, o nosso Diretor de Engenharia (o professor) determinou que o núcleo do sistema seja construído gerenciando a memória de forma manual e contígua.
-Neste primeiro desafio, você e sua equipe implementarão um MVP na linguagem de programação Java. A missão de vocês é desenvolver o módulo fundacional do sistema. Vocês deverão modelar os dados fundamentais do nosso negócio (Peças e Serviços) e criar o motor de gerenciamento dessas informações utilizando unicamente listas estáticas na memória.
+- Java 17
+- Spring Boot 3.5
+- Gradle
+- MySQL
+- JDBC
+- JUnit 5
 
-### Objetivos dessa Sprint:
-* Compreender e implementar Tipos Abstratos de Dados (TAD).
-* Dominar a manipulação de listas estáticas (Arrays Unidimensionais).
-* Implementar algoritmos de busca linear.
-* Analisar e vivenciar na prática as limitações e características das estruturas de dados estáticas.
+## Como executar
 
-## Membros da Equipe
+### Pré-requisitos
 
-* Hélio Nunes Moraes Junior
-* Kevilyn Bitencourt da Cruz
-* Rodrigo Alves Oliveira
-* Marcelo Henrique Fernandes
-* Murillo Rigaud dos Santos Oliveira
+- Java 17 instalado
+- MySQL em execução
+
+### Configuração
+
+1. Clone o projeto e acesse sua pasta.
+2. Execute o arquivo `script_mecaniqa.sql` no MySQL. Ele cria o banco `mecaniqa` e suas tabelas.
+3. Copie o arquivo `.env.example` para um novo arquivo chamado `.env`.
+4. Preencha o `.env` com os dados da sua conexão:
+
+```env
+DB_URL=jdbc:mysql://localhost:3306/mecaniqa
+DB_USER=seu_usuario
+DB_PASSWORD=sua_senha
+```
+
+5. Inicie a aplicação:
+
+```powershell
+.\gradlew.bat bootRun
+```
+
+No Linux ou macOS, use `./gradlew bootRun`. A API ficará disponível, por padrão, em `http://localhost:8080`.
+
+## Principais rotas
+
+| Recurso | Rota base | Operações |
+|---|---|---|
+| Peças | `/api/pecas` | cadastrar, listar, consultar, atualizar e excluir |
+| Serviços | `/api/servicos` | cadastrar, listar, consultar, atualizar e excluir |
+| Ordens de serviço | `/api/ordens-servico` | CRUD e atualização de status |
+| Pedidos de peças | `/api/pedidos` | criar, listar, consultar, excluir, adicionar itens e atualizar status |
+
+As coleções disponíveis na pasta `postman/` podem ser importadas no Postman para testar os endpoints.
+
+## Estrutura do projeto
+
+```text
+src/main/java/br/com/mecaniqa/
+├── config/       # conexão com o MySQL
+├── controller/   # endpoints REST
+├── dto/          # dados de entrada e saída da API
+├── mapper/       # conversão entre DTOs, modelos e resultados SQL
+├── model/        # entidades e regras do domínio
+├── repository/   # persistência com JDBC
+└── service/      # regras de negócio
+```
+
+## Testes
+
+Para executar os testes unitários, sem depender do MySQL:
+
+```powershell
+.\gradlew.bat test
+```
+
+Os testes de integração exigem um banco MySQL isolado. Configure as variáveis `MECANIQA_TEST_DB_URL`, `MECANIQA_TEST_DB_USER` e `MECANIQA_TEST_DB_PASSWORD` e execute:
+
+```powershell
+.\gradlew.bat integrationTest
+```
+
+> Nunca utilize o banco principal da equipe nos testes de integração, pois eles criam e removem dados.
+
+## Equipe
+
+- Hélio Nunes Moraes Junior
+- Kevilyn Bitencourt da Cruz
+- Rodrigo Alves Oliveira
+- Marcelo Henrique Fernandes
+- Murillo Rigaud dos Santos Oliveira
