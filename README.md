@@ -88,3 +88,4 @@ Os testes de integração exigem um banco MySQL isolado. Configure as variáveis
 - Rodrigo Alves Oliveira
 - Marcelo Henrique Fernandes
 - Murillo Rigaud dos Santos Oliveira
+- Albert Santos Soares
